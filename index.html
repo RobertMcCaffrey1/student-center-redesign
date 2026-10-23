@@ -59,8 +59,10 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 .iconbtn{position:relative;width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:var(--band-ink);display:grid;place-items:center}
 .iconbtn:hover{background:var(--band-field)}
 .badge{position:absolute;top:4px;right:2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--gold);color:var(--on-gold);font:700 12px/20px var(--body);text-align:center}
-.notes-toggle{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;border:1px solid #4A4740;background:transparent;color:var(--band-ink);font-size:14px;white-space:nowrap}
-.notes-toggle[aria-pressed="true"]{background:var(--gold);color:var(--on-gold);border-color:var(--gold);font-weight:700}
+.notes-fab{position:fixed;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:14px;font-weight:700;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.14)}
+.notes-fab:hover{color:var(--ink);border-color:var(--muted)}
+.notes-fab[aria-pressed="true"]{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
+.notes-fab kbd{font:500 11px var(--mono);border:1px solid currentColor;border-radius:4px;padding:0 5px;opacity:.65}
 .avatar{width:36px;height:36px;border-radius:999px;background:#3A372F;color:var(--band-ink);display:grid;place-items:center;font:700 14px var(--display)}
 .navwrap{position:relative}
 nav.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
@@ -242,7 +244,7 @@ main{padding-block:24px 48px}
 .mread .from{color:var(--muted);font-size:14px;margin-bottom:16px}
 .mread p{max-width:65ch}
 
-footer.foot{color:var(--muted);font-size:13px;padding-bottom:32px}
+footer.foot{color:var(--muted);font-size:13px;padding-bottom:80px}
 
 /* ---------- design notes ---------- */
 .pin{position:absolute;top:-11px;right:-11px;width:26px;height:26px;border-radius:999px;border:2px solid var(--surface);background:var(--gold);color:var(--on-gold);font:800 13px/1 var(--display);display:grid;place-items:center;z-index:15;box-shadow:0 2px 8px rgba(0,0,0,.25)}
@@ -277,7 +279,7 @@ aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);backgrou
   .hrow{flex-wrap:wrap;gap:10px}
   .search{order:3;flex-basis:100%;max-width:none}
   .hact{margin-left:auto}
-  .notes-toggle .lbl{display:none}
+  .notes-fab kbd{display:none}
   .search kbd{display:none}
   .chead{grid-template-columns:minmax(0,1fr) 28px;}
   .chead .cwhen,.chead .cdl{grid-column:1;padding-left:20px}
@@ -306,10 +308,6 @@ aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);backgrou
         <button class="iconbtn" data-go="messages" aria-label="Messages" data-note="9">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
           <span class="badge" id="badge"></span>
-        </button>
-        <button class="notes-toggle" id="notesBtn" aria-pressed="false" aria-controls="notes">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
-          <span class="lbl">Design notes</span>
         </button>
         <span class="avatar" aria-hidden="true">RM</span>
       </div>
@@ -428,6 +426,11 @@ aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);backgrou
 <footer class="foot wrap">
   CECS 448 Project 2 prototype. Course titles, times, and rooms come from CSULB's Fall 2026 class schedule. Deadlines, messages, and Spring 2027 sections are sample data for demonstration.
 </footer>
+
+<button class="notes-fab" id="notesBtn" aria-pressed="false" aria-controls="notes" title="Show design notes (N)">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+  Design notes <kbd>N</kbd>
+</button>
 
 <aside class="notes" id="notes" hidden aria-label="Design notes">
   <div class="nhead">
@@ -801,6 +804,7 @@ $('#q').addEventListener('keydown',e=>{
 document.addEventListener('keydown',e=>{
   if(e.key==='/'&&!/input|textarea|select/i.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}
   if(e.key==='Escape'&&!$('#notes').hidden)$('#notes').hidden=true;
+  if((e.key==='n'||e.key==='N')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!/input|textarea|select/i.test(document.activeElement.tagName))setNotes(!S.notes);
 });
 
 /* ---------- delegated clicks ---------- */

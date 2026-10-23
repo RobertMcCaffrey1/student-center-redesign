@@ -35,7 +35,7 @@ To get a live link, turn on GitHub Pages: **Settings → Pages → Deploy from a
 
 ## Demo guide
 
-Click **Design notes** in the header to show numbered pins on each fix. The side panel lists Before / After / Principle for each one, and clicking a note jumps to that part of the page.
+Click **Design notes** in the bottom-left corner (or press **N**) to show numbered pins on each fix. The side panel lists Before / After / Principle for each one, and clicking a note jumps to that part of the page.
 
 The **Demo clock** at the top of the notes panel sets the time, so a live demo can show "In class now" or the enrollment day regardless of when you present.
 
