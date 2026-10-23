@@ -1,0 +1,829 @@
+<title>Student Center Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky black header with one search + labeled tabs; content in a 1180px column; Home is a 2-col dashboard (today + enrollment) that stacks on phones. */
+:root{
+  --bg:#F3F3F0; --surface:#FFFFFF; --sunk:#ECEBE6; --ink:#1A1916; --muted:#5F5C55; --line:#DEDCD5;
+  --band:#141311; --band-ink:#F4F2EC; --band-muted:#A9A59B; --band-field:#2A2824;
+  --gold:#ECAA00; --gold-soft:#FCF1D3; --gold-ink:#7A5400; --on-gold:#1A1300;
+  --ok:#24704A; --ok-soft:#E3F1E8; --warn:#9A4A10; --warn-soft:#FBEADB; --bad:#B42318; --bad-soft:#FBE4E1;
+  --c1:#2F6FB0; --c2:#B5470E; --c3:#5B7F2A; --c4:#7A4CA0;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121210; --surface:#1B1A17; --sunk:#24231F; --ink:#EDEBE5; --muted:#A39F95; --line:#33312C;
+  --band:#0A0A09; --band-ink:#F4F2EC; --band-muted:#A9A59B; --band-field:#23211D;
+  --gold:#F2B52A; --gold-soft:#3A2E10; --gold-ink:#F2C04E; --on-gold:#1A1300;
+  --ok:#62C48D; --ok-soft:#173022; --warn:#F09A5A; --warn-soft:#3A2414; --bad:#F27268; --bad-soft:#3B1916;
+  --c1:#6FA6E0; --c2:#E8834C; --c3:#9CC266; --c4:#B78EDB; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121210; --surface:#1B1A17; --sunk:#24231F; --ink:#EDEBE5; --muted:#A39F95; --line:#33312C;
+  --band:#0A0A09; --band-ink:#F4F2EC; --band-muted:#A9A59B; --band-field:#23211D;
+  --gold:#F2B52A; --gold-soft:#3A2E10; --gold-ink:#F2C04E; --on-gold:#1A1300;
+  --ok:#62C48D; --ok-soft:#173022; --warn:#F09A5A; --warn-soft:#3A2414; --bad:#F27268; --bad-soft:#3B1916;
+  --c1:#6FA6E0; --c2:#E8834C; --c3:#9CC266; --c4:#B78EDB; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--band)}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tnum{font-variant-numeric:tabular-nums}
+[data-note]{position:relative}
+
+/* ---------- header ---------- */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--band);color:var(--band-ink);border-bottom:3px solid var(--gold)}
+.hrow{display:flex;align-items:center;gap:16px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:10px;flex:none;text-decoration:none}
+.brand-mark{width:34px;height:34px;border-radius:8px;background:var(--gold);color:var(--on-gold);display:grid;place-items:center;font:800 15px var(--display)}
+.brand-name{font:700 17px/1.1 var(--display)}
+.brand-name small{display:block;font:400 12px var(--body);color:var(--band-muted)}
+.search{flex:1;max-width:560px;margin-inline:auto;position:relative}
+.search input{width:100%;height:44px;border-radius:999px;border:1px solid transparent;background:var(--band-field);color:var(--band-ink);padding:0 52px 0 44px;font:16px var(--body)}
+.search input::placeholder{color:var(--band-muted)}
+.search input:focus{outline:none;border-color:var(--gold);background:#000}
+.search .sicon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--band-muted);pointer-events:none}
+.search kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);font:500 12px var(--mono);color:var(--band-muted);border:1px solid #4A4740;border-radius:5px;padding:1px 7px}
+.hact{display:flex;align-items:center;gap:8px;flex:none}
+.iconbtn{position:relative;width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:var(--band-ink);display:grid;place-items:center}
+.iconbtn:hover{background:var(--band-field)}
+.badge{position:absolute;top:4px;right:2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--gold);color:var(--on-gold);font:700 12px/20px var(--body);text-align:center}
+.notes-toggle{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:999px;border:1px solid #4A4740;background:transparent;color:var(--band-ink);font-size:14px;white-space:nowrap}
+.notes-toggle[aria-pressed="true"]{background:var(--gold);color:var(--on-gold);border-color:var(--gold);font-weight:700}
+.avatar{width:36px;height:36px;border-radius:999px;background:#3A372F;color:var(--band-ink);display:grid;place-items:center;font:700 14px var(--display)}
+.navwrap{position:relative}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:transparent;color:var(--band-muted);padding:10px 14px 12px;font-size:15px;font-weight:700;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-3px;display:flex;gap:8px;align-items:center}
+.tab:hover{color:var(--band-ink)}
+.tab[aria-current="page"]{color:var(--band-ink);border-bottom-color:var(--band-ink)}
+.tab .count{background:var(--gold);color:var(--on-gold);border-radius:999px;font-size:12px;padding:0 7px;line-height:19px}
+
+/* search results */
+.results{position:absolute;left:0;right:0;top:calc(100% + 8px);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.28);padding:8px;max-height:min(70vh,520px);overflow:auto;z-index:40}
+.rgroup{padding:6px 8px 2px}
+.ropt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:9px 10px}
+.rrow{display:flex;align-items:center;gap:6px}
+.rrow .ropt{flex:1;min-width:0}
+.ropt.active,.ropt:hover{background:var(--sunk)}
+.ropt .rt{flex:1;min-width:0}
+.ropt .rt b{display:block;font-weight:700}
+.ropt .rt span{display:block;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rkind{flex:none;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.rempty{padding:14px 10px;color:var(--muted)}
+.rfoot{border-top:1px solid var(--line);margin-top:6px;padding:8px 10px 2px;font-size:13px;color:var(--muted)}
+
+/* ---------- generic ---------- */
+main{padding-block:24px 48px}
+.view{display:flex;flex-direction:column;gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.card-h h2{font-size:19px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:15px;text-decoration:none}
+.btn:hover{background:var(--sunk)}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.btn.primary:hover{filter:brightness(.96)}
+.btn[disabled]{opacity:.5;cursor:not-allowed;filter:none}
+.btn.sm{height:34px;padding:0 12px;font-size:14px}
+.link{border:0;background:none;padding:0;color:var(--gold-ink);font-weight:700;text-decoration:underline;text-underline-offset:3px;font-size:15px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:700;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.gold{background:var(--gold-soft);color:var(--gold-ink)}
+.pill.plain{background:var(--sunk);color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:3px;flex:none}
+
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.pagehead h1{font-size:clamp(26px,3.4vw,34px);font-weight:800}
+.pagehead p{margin:4px 0 0;color:var(--muted)}
+
+.clockbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--gold-soft);color:var(--gold-ink);border-radius:8px;padding:8px 14px;font-size:14px}
+
+/* status chips */
+.status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.chip{display:flex;align-items:center;gap:12px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;min-width:0}
+.chip:hover{border-color:var(--muted)}
+.chip .ci{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;flex:none}
+.chip .ci.ok{background:var(--ok-soft);color:var(--ok)}
+.chip .ci.gold{background:var(--gold);color:var(--on-gold)}
+.chip b{display:block;font-size:15px}
+.chip span{display:block;font-size:13px;color:var(--muted)}
+.chip.attn{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+
+.home-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+.col{display:flex;flex-direction:column;gap:20px;min-width:0}
+
+/* today */
+.today .now-title{font:800 clamp(24px,3vw,30px)/1.15 var(--display);margin:6px 0 4px}
+.today .now-meta{color:var(--muted);display:flex;gap:6px 14px;flex-wrap:wrap}
+.today .now-meta b{color:var(--ink)}
+.bar{height:8px;background:var(--sunk);border-radius:999px;overflow:hidden;margin:16px 0 6px}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:999px}
+.later{margin-top:18px;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.later-row{display:grid;grid-template-columns:86px 1fr auto;gap:12px;align-items:center}
+.later-row .t{font-family:var(--mono);font-size:14px;color:var(--muted)}
+
+/* class list */
+.clist{display:flex;flex-direction:column}
+.crow{border-top:1px solid var(--line)}
+.crow:first-child{border-top:0}
+.chead{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.1fr) 28px;gap:14px;align-items:center;width:100%;border:0;background:transparent;text-align:left;padding:14px 4px}
+.chead:hover{background:var(--sunk)}
+.cname{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.cname .dot{margin-top:7px}
+.cname b{display:block}
+.cname span{display:block;font-size:14px;color:var(--muted)}
+.cwhen{font-size:15px}
+.cwhen span{display:block;color:var(--muted);font-size:14px}
+.cdl{font-size:14px}
+.cdl span{display:block;color:var(--muted)}
+.chev{transition:transform .15s;color:var(--muted)}
+.crow.open .chev{transform:rotate(180deg)}
+.cbody{padding:0 4px 16px 24px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start}
+.dl-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.dl-list li{display:flex;gap:10px;justify-content:space-between;border-bottom:1px dashed var(--line);padding-bottom:6px}
+.dl-list li.past{color:var(--muted);text-decoration:line-through}
+
+/* enrollment card */
+.enroll-card{border-color:var(--gold);box-shadow:inset 0 4px 0 var(--gold)}
+.big-count{font:800 40px/1 var(--display);margin:8px 0 2px}
+.steps{list-style:none;margin:18px 0;padding:0;display:flex;flex-direction:column}
+.step{display:grid;grid-template-columns:28px 1fr;gap:12px;position:relative;padding-bottom:16px}
+.step:last-child{padding-bottom:0}
+.step::before{content:"";position:absolute;left:13px;top:28px;bottom:0;width:2px;background:var(--line)}
+.step:last-child::before{display:none}
+.sdot{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;border:2px solid var(--line);background:var(--surface);font:700 13px var(--body);color:var(--muted);z-index:1}
+.step.done .sdot{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.step.current .sdot{border-color:var(--gold);background:var(--gold);color:var(--on-gold)}
+.step b{display:block}
+.step span{font-size:14px;color:var(--muted)}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+
+/* quick links */
+.qgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.qgroup h3{font:700 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.qgroup ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.qgroup button{display:flex;justify-content:space-between;width:100%;border:0;background:transparent;text-align:left;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.qgroup button:hover{color:var(--gold-ink)}
+
+/* week grid */
+.wkscroll{overflow-x:auto}
+.wk{min-width:560px;display:grid;grid-template-columns:52px repeat(5,minmax(0,1fr));}
+.wk.compact{min-width:420px}
+.wk-dh{padding:8px 6px;font-weight:700;font-size:14px;text-align:center;border-bottom:1px solid var(--line)}
+.wk-dh.today{color:var(--gold-ink)}
+.wk-dh.today span{background:var(--gold);color:var(--on-gold);border-radius:999px;padding:1px 9px}
+.wk-times{position:relative}
+.wk-times div{position:absolute;right:8px;font:500 11px var(--mono);color:var(--muted);transform:translateY(-50%)}
+.wk-col{position:relative;border-left:1px solid var(--line);background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% calc(100% / 10)}
+.wk-col.today{background-color:var(--gold-soft)}
+.blk{position:absolute;left:4px;right:4px;border-radius:6px;padding:4px 7px;font-size:12px;line-height:1.25;overflow:hidden;border-left:4px solid currentColor;background:var(--surface);box-shadow:0 1px 0 var(--line),0 0 0 1px var(--line)}
+.blk b{display:block;color:var(--ink);font-size:13px}
+.blk span{color:var(--muted)}
+.blk.conflict{background:var(--bad-soft);color:var(--bad)!important;box-shadow:0 0 0 1px var(--bad)}
+.nowline{position:absolute;left:0;right:0;height:2px;background:var(--bad);z-index:2}
+.nowline::before{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:999px;background:var(--bad)}
+
+/* enrollment view */
+.enr-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.fchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;height:34px;padding:0 14px;font-size:14px;font-weight:700}
+.fchip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.qnote{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--muted);margin-bottom:10px}
+.cat{display:flex;flex-direction:column}
+.catrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.catrow:first-child{border-top:0}
+.catrow b{display:block}
+.catrow .meta{font-size:14px;color:var(--muted)}
+.catrow .flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.cartlist{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.cartitem{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px 10px 10px 12px}
+.cartitem.conflict{border-color:var(--bad);background:var(--bad-soft)}
+.cartitem .meta{font-size:13px;color:var(--muted)}
+.xbtn{width:34px;height:34px;border-radius:8px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center}
+.xbtn:hover{background:var(--sunk);color:var(--ink)}
+.alert{border-radius:8px;padding:12px 14px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.alert.bad{background:var(--bad-soft);color:var(--bad)}
+.alert.warn{background:var(--warn-soft);color:var(--warn)}
+.alert.ok{background:var(--ok-soft);color:var(--ok)}
+.alert p{margin:0}
+.alert svg{flex:none;margin-top:2px}
+.totals{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin:10px 0 14px}
+.locked{font-size:14px;color:var(--muted);margin-top:8px}
+.empty{color:var(--muted);font-size:15px;padding:12px 0}
+
+/* finances / messages */
+.fin-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.money{font:800 44px/1 var(--display);font-variant-numeric:tabular-nums;margin:6px 0}
+.msg-grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
+.mlist{display:flex;flex-direction:column;padding:6px}
+.mitem{display:grid;grid-template-columns:10px 1fr;gap:10px;text-align:left;border:0;background:transparent;border-radius:8px;padding:12px 10px}
+.mitem:hover{background:var(--sunk)}
+.mitem[aria-current="true"]{background:var(--sunk)}
+.mitem .ud{width:8px;height:8px;border-radius:999px;margin-top:8px}
+.mitem.unread .ud{background:var(--gold)}
+.mitem b{display:block}
+.mitem.unread b{font-weight:700}
+.mitem:not(.unread) b{font-weight:400}
+.mitem span{display:block;font-size:13px;color:var(--muted)}
+.mread h2{font-size:22px;margin-bottom:4px}
+.mread .from{color:var(--muted);font-size:14px;margin-bottom:16px}
+.mread p{max-width:65ch}
+
+footer.foot{color:var(--muted);font-size:13px;padding-bottom:32px}
+
+/* ---------- design notes ---------- */
+.pin{position:absolute;top:-11px;right:-11px;width:26px;height:26px;border-radius:999px;border:2px solid var(--surface);background:var(--gold);color:var(--on-gold);font:800 13px/1 var(--display);display:grid;place-items:center;z-index:15;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.pin:hover{transform:scale(1.1)}
+.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%,40%{box-shadow:0 0 0 4px var(--gold)}100%{box-shadow:0 0 0 4px transparent}}
+aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:50;display:flex;flex-direction:column;box-shadow:-20px 0 50px rgba(0,0,0,.18);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.nhead{padding:18px 20px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.nhead h2{font-size:20px}
+.nhead p{margin:4px 0 0;font-size:14px;color:var(--muted)}
+.nbody{overflow:auto;padding:12px 20px 24px;display:flex;flex-direction:column;gap:10px}
+.note{border:1px solid var(--line);border-radius:10px;padding:14px;text-align:left;background:var(--surface);width:100%}
+.note:hover{border-color:var(--muted)}
+.note.hl{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.note-t{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.note-t .num{width:24px;height:24px;border-radius:999px;background:var(--gold);color:var(--on-gold);font:800 12px var(--display);display:grid;place-items:center;flex:none}
+.note-t b{font-family:var(--display);font-size:16px}
+.note dl{margin:0;display:grid;grid-template-columns:52px 1fr;gap:4px 10px;font-size:14px}
+.note dt{color:var(--muted);font-weight:700}
+.note dd{margin:0}
+.note .princ{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.democlock{border:1px dashed var(--line);border-radius:10px;padding:12px 14px;font-size:14px;display:flex;flex-direction:column;gap:8px}
+.democlock select{height:38px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 10px;font:15px var(--body)}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:12px 18px;border-radius:10px;font-size:15px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+
+@media (max-width:980px){
+  .home-grid,.enr-grid,.fin-grid,.msg-grid{grid-template-columns:minmax(0,1fr)}
+  .status{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .hrow{flex-wrap:wrap;gap:10px}
+  .search{order:3;flex-basis:100%;max-width:none}
+  .hact{margin-left:auto}
+  .notes-toggle .lbl{display:none}
+  .search kbd{display:none}
+  .chead{grid-template-columns:minmax(0,1fr) 28px;}
+  .chead .cwhen,.chead .cdl{grid-column:1;padding-left:20px}
+  .chead .chev{grid-column:2;grid-row:1}
+  .cbody{grid-template-columns:minmax(0,1fr);padding-left:20px}
+  .qgrid{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:420px){.status{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="hrow">
+      <button class="brand" style="border:0;background:none;color:inherit;padding:0" data-go="home" aria-label="Student Center home">
+        <span class="brand-mark">LB</span>
+        <span class="brand-name">Student Center<small>Robert McCaffrey</small></span>
+      </button>
+      <div class="search" data-note="1" role="search">
+        <svg class="sicon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="q" type="search" autocomplete="off" placeholder="Search classes or pages, e.g. “450” or “textbooks”" aria-label="Search classes and pages" aria-controls="results" aria-expanded="false">
+        <kbd>/</kbd>
+        <div class="results" id="results" role="listbox" hidden></div>
+      </div>
+      <div class="hact">
+        <button class="iconbtn" data-go="messages" aria-label="Messages" data-note="9">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <span class="badge" id="badge"></span>
+        </button>
+        <button class="notes-toggle" id="notesBtn" aria-pressed="false" aria-controls="notes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+          <span class="lbl">Design notes</span>
+        </button>
+        <span class="avatar" aria-hidden="true">RM</span>
+      </div>
+    </div>
+    <div class="navwrap" data-note="2">
+      <nav class="tabs" aria-label="Main">
+        <button class="tab" data-go="home">Home</button>
+        <button class="tab" data-go="schedule">My schedule</button>
+        <button class="tab" data-go="enroll">Enrollment</button>
+        <button class="tab" data-go="finances">Finances</button>
+        <button class="tab" data-go="messages">Messages <span class="count" id="tabcount"></span></button>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="clockbar" class="clockbar" hidden style="margin-bottom:16px"></div>
+
+  <!-- HOME -->
+  <section class="view" id="v-home">
+    <div class="pagehead">
+      <div>
+        <h1 id="greet">Good afternoon, Robert</h1>
+        <p id="dateline"></p>
+      </div>
+    </div>
+
+    <div class="status" data-note="3" id="status"></div>
+
+    <div class="home-grid">
+      <div class="col">
+        <div class="card today" data-note="7" id="today"></div>
+
+        <div class="card">
+          <div class="card-h">
+            <h2>Fall 2026 classes</h2>
+            <button class="link" data-go="schedule">See week view</button>
+          </div>
+          <div class="clist" id="clist"></div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="card enroll-card" data-note="4" id="enrollcard"></div>
+        <div class="card" data-note="10">
+          <div class="card-h"><h2>Shortcuts</h2></div>
+          <div class="qgrid" id="quick" style="grid-template-columns:minmax(0,1fr)"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section class="view" id="v-schedule" hidden>
+    <div class="pagehead">
+      <div><h1>My schedule</h1><p>Fall 2026 · 4 classes · 12 units</p></div>
+    </div>
+    <div class="card" data-note="11">
+      <div class="wkscroll" id="week"></div>
+    </div>
+  </section>
+
+  <!-- ENROLLMENT -->
+  <section class="view" id="v-enroll" hidden>
+    <div class="pagehead">
+      <div><h1>Spring 2027 enrollment</h1><p id="enr-sub"></p></div>
+    </div>
+    <div class="enr-grid">
+      <div class="card">
+        <div class="card-h"><h2>Classes</h2><span class="eyebrow">Spring 2027 · sample sections</span></div>
+        <div class="qnote" id="qnote"></div>
+        <div class="filters" role="group" aria-label="Filter by days">
+          <button class="fchip" data-days="all" aria-pressed="true">All days</button>
+          <button class="fchip" data-days="MW" aria-pressed="false">Mon / Wed</button>
+          <button class="fchip" data-days="TT" aria-pressed="false">Tue / Thu</button>
+          <button class="fchip" data-days="F" aria-pressed="false">Friday</button>
+        </div>
+        <div class="cat" id="cat"></div>
+      </div>
+      <div class="card" data-note="8" id="cart"></div>
+    </div>
+  </section>
+
+  <!-- FINANCES -->
+  <section class="view" id="v-finances" hidden>
+    <div class="pagehead"><div><h1>Finances</h1><p>Fall 2026</p></div></div>
+    <div class="fin-grid">
+      <div class="card">
+        <span class="eyebrow">Amount due</span>
+        <div class="money">$0.00</div>
+        <span class="pill ok">Nothing owed</span>
+        <p style="color:var(--muted);margin:14px 0 0">You have no outstanding charges. Spring 2027 fees will appear here after you enroll.</p>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Financial aid</h2></div>
+        <div class="qgroup"><ul>
+          <li><button data-page="View financial aid">View financial aid <span aria-hidden="true">›</span></button></li>
+          <li><button data-page="Accept or decline awards">Accept or decline awards <span aria-hidden="true">›</span></button></li>
+          <li><button data-page="Student fee information">Student fee information <span aria-hidden="true">›</span></button></li>
+        </ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MESSAGES -->
+  <section class="view" id="v-messages" hidden>
+    <div class="pagehead"><div><h1>Messages</h1><p id="msgsub"></p></div></div>
+    <div class="msg-grid">
+      <div class="card" style="padding:0"><div class="mlist" id="mlist"></div></div>
+      <div class="card mread" id="mread"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  CECS 448 Project 2 prototype. Course titles, times, and rooms come from CSULB's Fall 2026 class schedule. Deadlines, messages, and Spring 2027 sections are sample data for demonstration.
+</footer>
+
+<aside class="notes" id="notes" hidden aria-label="Design notes">
+  <div class="nhead">
+    <div><h2>Design notes</h2><p>Each numbered pin marks a fix for a usability issue in the original Student Center. Select a note to jump to it.</p></div>
+    <button class="xbtn" id="notesClose" aria-label="Close design notes"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="nbody" id="nbody"></div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const ICON={
+  check:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>',
+  chev:'<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
+  x:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  warn:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17v.5"/></svg>',
+  mail:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+};
+const DAYN={Mo:1,Tu:2,We:3,Th:4,Fr:5};
+const DAYLONG=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const m=t=>{const[h,mm]=t.split(':').map(Number);return h*60+mm};
+const fmt=x=>{let h=Math.floor(x/60),mm=x%60,ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+String(mm).padStart(2,'0')+' '+ap};
+const D3={Mo:'Mon',Tu:'Tue',We:'Wed',Th:'Thu',Fr:'Fri'};const dj=(d,sep=' / ')=>d.map(x=>D3[x]).join(sep);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- data ---------- */
+const CUR=[
+ {code:'CECS 491A',sec:'05',nbr:8592,title:'Computer Science Senior Project I',days:['Mo','We'],s:'9:30',e:'10:45',bldg:'ECS',room:'405',c:'--c4'},
+ {code:'CECS 475',sec:'02',nbr:8748,title:'Software Development with Frameworks',days:['Tu','Th'],s:'9:30',e:'10:45',bldg:'ECS',room:'404',c:'--c3'},
+ {code:'CECS 448',sec:'01',nbr:4652,title:'User Interface Design',days:['Tu','Th'],s:'11:00',e:'12:15',bldg:'ECS',room:'302',c:'--c1'},
+ {code:'CECS 427',sec:'01',nbr:7691,title:'Dynamic Networks',days:['Tu','Th'],s:'15:30',e:'16:45',bldg:'VEC',room:'518',c:'--c2'}
+];
+const DEADLINES=[
+ {label:'Last day to add',date:new Date(2026,8,4)},
+ {label:'Last day to drop (no W on transcript)',date:new Date(2026,8,11)},
+ {label:'Last day to withdraw',date:new Date(2026,10,20)},
+ {label:'Final exam',date:null,txt:'Posted in December'}
+];
+const CAT=[
+ {code:'CECS 428',title:'Analysis of Algorithms',days:['Tu','Th'],s:'9:30',e:'10:45',bldg:'ECS',room:'302'},
+ {code:'CECS 429',title:'Search Engine Technology',days:['Tu','Th'],s:'15:30',e:'16:45',bldg:'LA4',room:'120'},
+ {code:'CECS 440',title:'Computer Architecture',days:['Tu','Th'],s:'8:00',e:'8:50',bldg:'ECS',room:'412'},
+ {code:'CECS 443',title:'Software Project Management and Testing',days:['Tu','Th'],s:'11:00',e:'12:15',bldg:'ECS',room:'403'},
+ {code:'CECS 447',title:'Embedded Systems III',days:['Mo','We'],s:'14:00',e:'14:50',bldg:'ECS',room:'414'},
+ {code:'CECS 449',title:'Computer Graphics',days:['Mo','We'],s:'9:30',e:'10:45',bldg:'ECS',room:'404'},
+ {code:'CECS 450',title:'Data Visualization',days:['Tu','Th'],s:'9:30',e:'10:45',bldg:'ECS',room:'407'},
+ {code:'CECS 451',title:'Artificial Intelligence',days:['Fr'],s:'9:00',e:'11:45',bldg:'ECS',room:'407'},
+ {code:'CECS 453',title:'Mobile Application Development',days:['Mo','We'],s:'8:00',e:'9:15',bldg:'ECS',room:'412'},
+ {code:'CECS 455',title:'Intro to Game Programming',days:['Mo','We'],s:'11:00',e:'12:15',bldg:'ECS',room:'416'},
+ {code:'CECS 491B',title:'Computer Science Senior Project II',days:['Mo','We'],s:'14:00',e:'15:15',bldg:'ECS',room:'308',consent:true}
+].map(c=>({...c,units:3}));
+const MSGS=[
+ {id:0,from:'Enrollment Services',date:'Oct 20',subj:'Your Spring 2027 enrollment appointment',body:'Your enrollment appointment for the Spring 2027 regular session is Thursday, November 5, 2026. You can add classes to your shopping cart now and check them for conflicts before your appointment opens.',unread:true},
+ {id:1,from:'CECS Department',date:'Oct 16',subj:'CECS 491B needs a permission number',body:'Senior Project II requires instructor consent. Ask your 491A instructor for a permission number before your enrollment appointment, then enter it in your shopping cart.',unread:true},
+ {id:2,from:'Student Financial Services',date:'Aug 24',subj:'Fall 2026 payment received',body:'Your Fall 2026 tuition and fee payment was received. Your balance is $0.00.',unread:false}
+];
+const PAGES=[
+ {name:'Degree Planner',sub:'See what you still need to graduate',k:'degree planner requirements graduate roadmap'},
+ {name:'My Academics',sub:'Grades, transcript, GPA',k:'academics grades transcript gpa unofficial'},
+ {name:'My Textbooks',sub:'Books for your Fall 2026 classes',k:'textbooks books bookstore'},
+ {name:'Drop or swap a class',sub:'Formerly “Enrollment Adjustments”',k:'enrollment adjustments drop swap withdraw edit change'},
+ {name:'CSU Fully Online',sub:'Take an online class at another CSU',k:'csu fully online cross enroll'},
+ {name:'View financial aid',sub:'Finances',k:'financial aid fafsa grants loans',go:'finances'},
+ {name:'Accept or decline awards',sub:'Finances',k:'accept decline awards aid',go:'finances'},
+ {name:'Student fee information',sub:'Finances',k:'fees tuition cost payment',go:'finances'},
+ {name:'Shopping cart',sub:'Spring 2027 enrollment',k:'shopping cart enroll register spring add',go:'enroll'},
+ {name:'Weekly schedule',sub:'My schedule',k:'weekly schedule calendar week timetable',go:'schedule'},
+ {name:'Messages',sub:'Inbox',k:'messages inbox mail notifications',go:'messages'}
+];
+const NOTES=[
+ {n:1,view:null,t:'One search box',before:'A gold “Search for Classes” button and a “Search” link in the Academics menu. Two entry points with no hint of how they differ.',after:'One search field in the header finds classes and pages. Press / to jump to it from anywhere.',p:['Consistency and standards','Flexibility and efficiency of use']},
+ {n:2,view:null,t:'Visible navigation',before:'Two hamburger icons on section headers hid menus that repeated links already on the page.',after:'Five labeled tabs that are always visible, with the current page underlined.',p:['Recognition rather than recall','Signifiers (Norman)']},
+ {n:3,view:'home',t:'Status at a glance',before:'“Holds” and “To Do List” each took a full panel to say “No Holds.” and “No To Do’s.”',after:'One row of status chips. A chip only gets an accent color when it needs action.',p:['Aesthetic and minimalist design','Visibility of system status']},
+ {n:4,view:'home',t:'Enrollment timeline',before:'The Nov 5 enrollment appointment sat in a paragraph at the bottom of the sidebar.',after:'A countdown and a three-step timeline, with the next action as the primary button.',p:['Visibility of system status','Match between system and the real world']},
+ {n:5,view:'home',t:'Plain language',before:'Course codes only, the abbreviation “SEM”, and an unexplained “URL” label.',after:'Course titles under each code, “Seminar” spelled out, and the jargon label removed.',p:['Match between system and the real world']},
+ {n:6,view:'home',t:'Deadlines in words',before:'An identical calendar icon on every row. You had to click each one to learn anything.',after:'The next deadline is written on each row. Expand a row to see the full list.',p:['Recognition rather than recall','Information scent']},
+ {n:7,view:'home',t:'Today first',before:'A static table sorted by course code. You had to work out which class came next.',after:'An “In class now / Up next” card with the room and time remaining.',p:['User-centered task priority','Visibility of system status']},
+ {n:8,view:'enroll',t:'Conflicts caught early',before:'Time conflicts only surfaced when you validated or tried to enroll. Nothing said when Enroll would work.',after:'The cart flags overlaps the moment you add a class and shows them on a mini calendar. Enroll states when it unlocks.',p:['Error prevention','Help users recognize and recover from errors']},
+ {n:9,view:null,t:'Unread count',before:'“View My Messages” looked the same whether or not anything was new.',after:'A badge on the inbox icon and the Messages tab shows the unread count.',p:['Visibility of system status']},
+ {n:10,view:'home',t:'Links grouped by task',before:'One flat menu mixed planning, enrollment, and textbooks. Enrollment features were split across three places.',after:'Shortcuts grouped under Plan, Change my classes, and Money.',p:['Gestalt: proximity','Information architecture']},
+ {n:11,view:'schedule',t:'Week view',before:'Meeting times only as text, like “TuTh 3:30PM – 4:45PM”.',after:'A weekly calendar with today highlighted and a line at the current time.',p:['Match between system and the real world']}
+];
+
+/* ---------- state ---------- */
+const S={view:'home',q:'',days:'all',cart:['CECS 491B','CECS 428'],enrolled:[],open:new Set(),notes:false,clock:'real',msg:0,validated:null};
+try{const c=localStorage.getItem('sc-clock');if(c)S.clock=c;}catch(e){}
+
+const CLOCKS={
+ real:{label:'Real time'},
+ thu29:{label:'Thu Oct 29, 11:30 AM (in UI Design)',d:()=>new Date(2026,9,29,11,30)},
+ tue3:{label:'Tue Nov 3, 9:15 AM (before first class)',d:()=>new Date(2026,10,3,9,15)},
+ fri23:{label:'Fri Oct 23, 10:00 AM (no classes)',d:()=>new Date(2026,9,23,10,0)},
+ nov5:{label:'Thu Nov 5, 8:00 AM (enrollment opens)',d:()=>new Date(2026,10,5,8,0)}
+};
+const now=()=>S.clock!=='real'&&CLOCKS[S.clock]?CLOCKS[S.clock].d():new Date();
+const APPT=new Date(2026,10,5), CART_OPEN=new Date(2026,9,6);
+const sod=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const dshort=d=>d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+const enrollOpen=()=>now()>=APPT;
+
+const byCode=c=>CAT.find(x=>x.code===c);
+const overlap=(a,b)=>a.days.some(d=>b.days.includes(d))&&m(a.s)<m(b.e)&&m(b.s)<m(a.e);
+function cartConflicts(){
+  const items=S.cart.map(byCode), pairs=[];
+  for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++)if(overlap(items[i],items[j]))pairs.push([items[i],items[j]]);
+  return pairs;
+}
+
+/* ---------- toast ---------- */
+let tt;function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2800)}
+
+/* ---------- navigation ---------- */
+function go(v){S.view=v;$$('.view').forEach(s=>s.hidden=s.id!=='v-'+v);$$('.tab').forEach(t=>t.setAttribute('aria-current',t.dataset.go===v?'page':'false'));render();window.scrollTo({top:0})}
+function openPage(name){const p=PAGES.find(x=>x.name===name);if(p&&p.go){go(p.go);toast('Opened '+p.name)}else toast('“'+name+'” would open here. Not built in this prototype.')}
+
+/* ---------- renders ---------- */
+function renderHeader(){
+  const u=MSGS.filter(x=>x.unread).length;
+  $('#badge').textContent=u;$('#badge').hidden=!u;
+  $('#tabcount').textContent=u;$('#tabcount').hidden=!u;
+  document.querySelector('[data-go="messages"].iconbtn').setAttribute('aria-label','Messages, '+u+' unread');
+  const cb=$('#clockbar');
+  if(S.clock!=='real'){cb.hidden=false;cb.innerHTML='<b>Demo clock:</b> '+esc(CLOCKS[S.clock].label)+' <button class="link" id="realclock">Use real time</button>';$('#realclock').onclick=()=>setClock('real')}else cb.hidden=true;
+}
+function setClock(c){S.clock=c;try{localStorage.setItem('sc-clock',c)}catch(e){}S.validated=null;render()}
+
+function todays(d){const wd=d.getDay();return CUR.filter(c=>c.days.some(x=>DAYN[x]===wd)).sort((a,b)=>m(a.s)-m(b.s))}
+function nextAfter(d){
+  for(let i=1;i<=7;i++){const nd=new Date(d);nd.setDate(d.getDate()+i);const t=todays(nd);if(t.length)return{day:nd,c:t[0]}}
+}
+
+function renderHome(){
+  const d=now(),mins=d.getHours()*60+d.getMinutes();
+  const h=d.getHours();
+  $('#greet').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', Robert';
+  $('#dateline').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+' · Fall 2026';
+
+  const u=MSGS.filter(x=>x.unread).length;
+  $('#status').innerHTML=[
+    {i:ICON.check,cls:'ok',b:'No holds',s:'You can enroll',act:'holds'},
+    {i:ICON.check,cls:'ok',b:'To-do list clear',s:'Nothing required',act:'todo'},
+    {i:ICON.check,cls:'ok',b:'$0.00 due',s:'Finances',act:'finances'},
+    {i:ICON.mail,cls:u?'gold':'ok',b:u?u+' unread messages':'Inbox clear',s:'Messages',act:'messages',attn:!!u}
+  ].map(x=>`<button class="chip${x.attn?' attn':''}" data-status="${x.act}"><span class="ci ${x.cls}">${x.i}</span><span style="min-width:0"><b>${x.b}</b><span>${x.s}</span></span></button>`).join('');
+
+  /* today card */
+  const t=todays(d);let html='';
+  const cur=t.find(c=>m(c.s)<=mins&&mins<m(c.e));
+  const nxt=t.find(c=>m(c.s)>mins);
+  const room=c=>`<b>${c.bldg} ${c.room}</b>`;
+  if(cur){
+    const pct=Math.round((mins-m(cur.s))/(m(cur.e)-m(cur.s))*100),left=m(cur.e)-mins;
+    html=`<span class="eyebrow">In class now</span><div class="now-title">${esc(cur.title)}</div>
+    <div class="now-meta"><span>${cur.code}</span><span>${room(cur)}</span><span class="tnum">Ends ${fmt(m(cur.e))}</span></div>
+    <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div><div class="tnum" style="font-size:14px;color:var(--muted)">${left} min left</div>`;
+  }else if(nxt){
+    const diff=m(nxt.s)-mins,hh=Math.floor(diff/60),mm=diff%60;
+    html=`<span class="eyebrow">Up next today</span><div class="now-title">${esc(nxt.title)}</div>
+    <div class="now-meta"><span>${nxt.code}</span><span>${room(nxt)}</span><span class="tnum">Starts ${fmt(m(nxt.s))}</span></div>
+    <div style="margin-top:12px"><span class="pill gold tnum">In ${hh?hh+' h ':''}${mm} min</span></div>`;
+  }else{
+    const n=nextAfter(d);
+    html=`<span class="eyebrow">${t.length?'Done for today':'No classes today'}</span><div class="now-title">Next: ${esc(n.c.title)}</div>
+    <div class="now-meta"><span>${DAYLONG[n.day.getDay()]} at ${fmt(m(n.c.s))}</span><span>${room(n.c)}</span></div>`;
+  }
+  const rest=t.filter(c=>c!==cur&&c!==nxt&&m(c.s)>mins);
+  if(rest.length)html+=`<div class="later"><span class="eyebrow">Later today</span>${rest.map(c=>`<div class="later-row"><span class="t">${fmt(m(c.s))}</span><span>${esc(c.title)}</span><span style="color:var(--muted);font-size:14px">${c.bldg} ${c.room}</span></div>`).join('')}</div>`;
+  $('#today').innerHTML=html;
+
+  /* class list */
+  const nextDL=DEADLINES.find(x=>x.date&&x.date>=sod(d));
+  $('#clist').innerHTML=CUR.map((c,i)=>{
+    const open=S.open.has(c.code);
+    return `<div class="crow${open?' open':''}">
+      <button class="chead" aria-expanded="${open}" data-row="${c.code}">
+        <span class="cname"${i===0?' data-note="5"':''}><span class="dot" style="background:var(${c.c})"></span><span style="min-width:0"><b>${c.code} · ${esc(c.title)}</b><span>Seminar · Section ${c.sec} · Class #${c.nbr}</span></span></span>
+        <span class="cwhen tnum">${dj(c.days)}<span>${fmt(m(c.s))} – ${fmt(m(c.e))} · ${c.bldg} ${c.room}</span></span>
+        <span class="cdl"${i===0?' data-note="6"':''}>${nextDL?`${nextDL.label}<span>${dshort(nextDL.date)}</span>`:'No upcoming deadlines'}</span>
+        ${ICON.chev}
+      </button>
+      ${open?`<div class="cbody"><ul class="dl-list">${DEADLINES.map(x=>{const past=x.date&&x.date<sod(d);return `<li class="${past?'past':''}"><span>${x.label}</span><span class="tnum">${x.date?dshort(x.date):x.txt}${past?' · passed':''}</span></li>`}).join('')}</ul>
+        <div class="btnrow" style="flex-direction:column"><button class="btn sm" data-page="Drop or swap a class">Drop or swap</button><button class="btn sm" data-page="My Textbooks">Textbooks</button></div></div>`:''}
+    </div>`}).join('');
+
+  /* enrollment card */
+  const days=Math.ceil((APPT-sod(d))/864e5),conf=cartConflicts().length;
+  const big=enrollOpen()?'Open now':days===1?'Tomorrow':days+' days';
+  const units=S.cart.length*3;
+  $('#enrollcard').innerHTML=`<span class="eyebrow">Spring 2027 enrollment</span>
+    <div class="big-count tnum">${enrollOpen()?'Enrollment is open':'Enroll in '+big}</div>
+    <div style="color:var(--muted)">Your appointment: <b style="color:var(--ink)">Thursday, Nov 5, 2026</b></div>
+    <ol class="steps">
+      <li class="step done"><span class="sdot">${ICON.check}</span><span><b>Shopping cart opened</b><span>${dshort(CART_OPEN)}</span></span></li>
+      <li class="step ${enrollOpen()&&!S.cart.length&&S.enrolled.length?'done':'current'}"><span class="sdot">2</span><span><b>Plan your classes</b><span>${S.cart.length} in cart · ${units} units${conf?` · <span style="color:var(--bad);font-weight:700">${conf} time conflict${conf>1?'s':''}</span>`:''}</span></span></li>
+      <li class="step ${S.enrolled.length?'done':enrollOpen()?'current':''}"><span class="sdot">${S.enrolled.length?ICON.check:'3'}</span><span><b>Enroll</b><span>${S.enrolled.length?S.enrolled.length+' classes enrolled':enrollOpen()?'Open now':'Opens '+dshort(APPT)}</span></span></li>
+    </ol>
+    <div class="btnrow"><button class="btn primary" data-go="enroll">${enrollOpen()?'Enroll now':'Plan my classes'}</button></div>`;
+
+  /* quick links */
+  const G=[['Plan',['Degree Planner','My Academics','My Textbooks','CSU Fully Online']],['Change my classes',['Shopping cart','Drop or swap a class']],['Money',['View financial aid','Accept or decline awards','Student fee information']]];
+  $('#quick').innerHTML=G.map(([h,l])=>`<div class="qgroup"><h3>${h}</h3><ul>${l.map(x=>`<li><button data-page="${x}">${x}<span aria-hidden="true">›</span></button></li>`).join('')}</ul></div>`).join('');
+}
+
+function weekHTML(items,opts={}){
+  const d=now(),wd=d.getDay(),mins=d.getHours()*60+d.getMinutes();
+  const H0=480,H1=1080,span=H1-H0,height=opts.compact?380:620;
+  const labels=['Mon','Tue','Wed','Thu','Fri'];
+  let h=`<div class="wk${opts.compact?' compact':''}" role="img" aria-label="${opts.aria||'Weekly schedule'}"><div></div>`;
+  labels.forEach((l,i)=>{const td=(i+1)===wd&&!opts.compact;h+=`<div class="wk-dh${td?' today':''}">${td?`<span>${l}</span>`:l}</div>`});
+  h+=`<div class="wk-times" style="height:${height}px">`;
+  for(let x=H0;x<=H1;x+=60)if(x<H1&&x>H0||x===H0)h+=`<div style="top:${(x-H0)/span*100}%">${fmt(x).replace(':00','')}</div>`;
+  h+='</div>';
+  for(let day=1;day<=5;day++){
+    const td=day===wd&&!opts.compact;
+    h+=`<div class="wk-col${td?' today':''}" style="height:${height}px">`;
+    items.filter(c=>c.days.some(x=>DAYN[x]===day)).forEach(c=>{
+      const top=(m(c.s)-H0)/span*100,ht=(m(c.e)-m(c.s))/span*100;
+      const cf=opts.conflicts&&opts.conflicts.has(c.code);
+      h+=`<div class="blk${cf?' conflict':''}" style="top:${top}%;height:${ht}%;color:var(${c.c||'--gold-ink'})"><b>${c.code}</b><span>${opts.compact?'':esc(c.title)+'<br>'}${fmt(m(c.s))}${opts.compact?'':' · '+c.bldg+' '+c.room}</span></div>`;
+    });
+    if(td&&mins>=H0&&mins<=H1)h+=`<div class="nowline" style="top:${(mins-H0)/span*100}%" aria-hidden="true"></div>`;
+    h+='</div>';
+  }
+  return h+'</div>';
+}
+function renderSchedule(){$('#week').innerHTML=weekHTML(CUR,{aria:'Fall 2026 weekly schedule'})}
+
+function renderEnroll(){
+  const d=now(),days=Math.ceil((APPT-sod(d))/864e5);
+  $('#enr-sub').innerHTML=enrollOpen()?'Your enrollment appointment is open.':`Appointment: Thu, Nov 5 · <span class="tnum">${days===1?'tomorrow':'in '+days+' days'}</span>`;
+  $$('.fchip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.days===S.days));
+  const q=S.q.trim().toLowerCase();
+  $('#qnote').innerHTML=q?`Showing results for <b style="color:var(--ink)">“${esc(S.q)}”</b> <button class="link" id="clearq">Clear search</button>`:'Use the search box at the top to narrow this list.';
+  if(q)$('#clearq').onclick=()=>{S.q='';$('#q').value='';render()};
+  const daysOk=c=>S.days==='all'||(S.days==='MW'&&c.days.includes('Mo'))||(S.days==='TT'&&c.days.includes('Tu'))||(S.days==='F'&&c.days.includes('Fr'));
+  const list=CAT.filter(c=>daysOk(c)&&(!q||(c.code+' '+c.title).toLowerCase().includes(q)));
+  const cartItems=S.cart.map(byCode);
+  $('#cat').innerHTML=list.length?list.map(c=>{
+    const inCart=S.cart.includes(c.code),done=S.enrolled.includes(c.code);
+    const clash=!inCart&&cartItems.find(x=>overlap(x,c));
+    return `<div class="catrow"><div style="min-width:0"><b>${c.code} · ${esc(c.title)}</b>
+      <div class="meta tnum">${dj(c.days)} ${fmt(m(c.s))} – ${fmt(m(c.e))} · ${c.bldg} ${c.room} · ${c.units} units</div>
+      ${clash||c.consent?`<div class="flags">${clash?`<span class="pill bad">${ICON.warn} Overlaps ${clash.code}</span>`:''}${c.consent?'<span class="pill warn">Instructor consent required</span>':''}</div>`:''}</div>
+      ${done?'<span class="pill ok">'+ICON.check+' Enrolled</span>':inCart?`<button class="btn sm" data-remove="${c.code}">${ICON.check} In cart</button>`:`<button class="btn sm" data-add="${c.code}">${ICON.plus} Add</button>`}</div>`}).join(''):`<p class="empty">No Spring 2027 classes match “${esc(S.q)}”. Try a course number like 450, or clear the search.</p>`;
+
+  /* cart */
+  const pairs=cartConflicts(),cset=new Set(pairs.flat().map(c=>c.code));
+  const units=S.cart.length*3;
+  let h=`<div class="card-h"><h2>Shopping cart</h2><span class="eyebrow tnum">${S.cart.length} classes · ${units} units</span></div>`;
+  if(S.enrolled.length)h+=`<div class="alert ok" style="margin-bottom:12px">${ICON.check}<p><b>Enrolled in ${S.enrolled.join(', ')}.</b> <button class="link" id="undo" style="font-size:14px">Undo</button></p></div>`;
+  h+=S.cart.length?`<div class="cartlist">${cartItems.map(c=>`<div class="cartitem${cset.has(c.code)?' conflict':''}"><span class="dot" style="background:${cset.has(c.code)?'var(--bad)':'var(--gold)'}"></span><div style="min-width:0"><b>${c.code} · ${esc(c.title)}</b><div class="meta tnum">${dj(c.days)} ${fmt(m(c.s))} – ${fmt(m(c.e))}${c.consent?' · needs permission number':''}</div></div><button class="xbtn" data-remove="${c.code}" aria-label="Remove ${c.code}">${ICON.x}</button></div>`).join('')}</div>`:'<p class="empty">Your cart is empty. Add classes from the list.</p>';
+  if(pairs.length)h+=`<div class="alert bad" style="margin-bottom:12px">${ICON.warn}<p><b>${pairs.length} time conflict${pairs.length>1?'s':''}.</b> ${pairs.map(([a,b])=>`${a.code} and ${b.code} both meet ${dj(a.days.filter(x=>b.days.includes(x)),'/')} at ${fmt(Math.max(m(a.s),m(b.s)))}`).join('; ')}. Remove one to enroll.</p></div>`;
+  if(S.cart.length)h+=`<div class="wkscroll" style="margin-bottom:14px">${weekHTML(cartItems,{compact:true,conflicts:cset,aria:'Shopping cart week preview'})}</div>`;
+  if(S.validated)h+=`<div class="alert ${S.validated.type}" style="margin-bottom:12px">${S.validated.type==='ok'?ICON.check:ICON.warn}<p>${S.validated.msg}</p></div>`;
+  h+=`<div class="btnrow"><button class="btn" id="validate"${S.cart.length?'':' disabled'}>Check my cart</button><button class="btn primary" id="enrollbtn"${enrollOpen()&&S.cart.length?'':' disabled'} aria-describedby="lockmsg">Enroll</button></div>`;
+  h+=enrollOpen()?`<p class="locked" id="lockmsg">Your appointment is open.</p>`:`<p class="locked" id="lockmsg">Enroll unlocks Thu, Nov 5 at your appointment. <button class="link" id="sim" style="font-size:14px">Preview Nov 5</button></p>`;
+  $('#cart').innerHTML=h;
+
+  $('#validate').onclick=()=>{
+    const p=cartConflicts(),cons=S.cart.map(byCode).filter(c=>c.consent);
+    if(p.length)S.validated={type:'bad',msg:'<b>Not ready.</b> Fix the time conflict above before your appointment.'};
+    else if(cons.length)S.validated={type:'warn',msg:`<b>Almost ready.</b> ${cons.map(c=>c.code).join(', ')} needs a permission number from the instructor. Everything else can be enrolled.`};
+    else S.validated={type:'ok',msg:'<b>Ready to enroll.</b> No conflicts, no holds, and no missing permissions.'};
+    render();
+  };
+  $('#enrollbtn').onclick=()=>{
+    const p=cartConflicts();
+    if(p.length){S.validated={type:'bad',msg:'<b>Enrollment stopped.</b> Remove one class from each conflict, then enroll again. Nothing was changed.'};render();return}
+    const ok=S.cart.filter(c=>!byCode(c).consent),held=S.cart.filter(c=>byCode(c).consent);
+    S.enrolled.push(...ok);S.cart=held;
+    S.validated=held.length?{type:'warn',msg:`${held.join(', ')} stayed in your cart. Add a permission number to enroll in it.`}:null;
+    render();toast('Enrolled in '+ok.length+' class'+(ok.length===1?'':'es'));
+  };
+  const sim=$('#sim');if(sim)sim.onclick=()=>{setClock('nov5');toast('Demo clock set to Thu Nov 5')};
+  const undo=$('#undo');if(undo)undo.onclick=()=>{S.cart.push(...S.enrolled);S.enrolled=[];S.validated=null;render();toast('Enrollment undone')};
+}
+
+function renderMessages(){
+  if(MSGS[S.msg].unread){MSGS[S.msg].unread=false;renderHeader()}
+  const u=MSGS.filter(x=>x.unread).length;
+  $('#msgsub').textContent=u?u+' unread':'All caught up';
+  $('#mlist').innerHTML=MSGS.map(x=>`<button class="mitem${x.unread?' unread':''}" data-msg="${x.id}" aria-current="${S.msg===x.id}"><span class="ud"></span><span><b>${esc(x.subj)}</b><span>${esc(x.from)} · ${x.date}</span></span></button>`).join('');
+  const x=MSGS[S.msg];
+  $('#mread').innerHTML=`<h2>${esc(x.subj)}</h2><div class="from">${esc(x.from)} · ${x.date}</div><p>${esc(x.body)}</p>${x.id<2?`<div class="btnrow" style="margin-top:16px"><button class="btn" data-go="enroll">Go to shopping cart</button></div>`:''}`;
+}
+
+function renderNotes(){
+  $('#nbody').innerHTML=`<div class="democlock"><label for="clocksel"><b>Demo clock</b><br><span style="color:var(--muted)">Set the time for a live demo so “In class now” and the enrollment countdown show what you want.</span></label>
+  <select id="clocksel">${Object.entries(CLOCKS).map(([k,v])=>`<option value="${k}"${S.clock===k?' selected':''}>${v.label}</option>`).join('')}</select></div>`+
+  NOTES.map(n=>`<button class="note" data-jump="${n.n}" id="note-${n.n}"><div class="note-t"><span class="num">${n.n}</span><b>${n.t}</b></div>
+  <dl><dt>Before</dt><dd>${n.before}</dd><dt>After</dt><dd>${n.after}</dd></dl>
+  <div class="princ">${n.p.map(p=>`<span class="pill plain">${p}</span>`).join('')}</div></button>`).join('');
+  $('#clocksel').onchange=e=>setClock(e.target.value);
+}
+
+function renderPins(){
+  $$('.pin').forEach(p=>p.remove());
+  if(!S.notes)return;
+  NOTES.forEach(n=>{
+    const el=document.querySelector(`[data-note="${n.n}"]`);
+    if(!el||!el.offsetParent)return;
+    const b=document.createElement('span');b.className='pin';b.setAttribute('role','button');b.tabIndex=0;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();openNote(n.n)}};b.textContent=n.n;b.setAttribute('aria-label','Design note '+n.n+': '+n.t);
+    b.onclick=e=>{e.stopPropagation();e.preventDefault();openNote(n.n)};
+    el.appendChild(b);
+  });
+}
+function openNote(n){
+  $('#notes').hidden=false;
+  $$('.note').forEach(x=>x.classList.toggle('hl',x.dataset.jump==String(n)));
+  const el=$('#note-'+n);el&&el.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function jump(n){
+  const note=NOTES.find(x=>x.n==n);
+  if(note.view&&S.view!==note.view)go(note.view);
+  const el=document.querySelector(`[data-note="${n}"]`);
+  if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+  $$('.note').forEach(x=>x.classList.toggle('hl',x.dataset.jump==String(n)));
+  if(window.innerWidth<700)setNotes(true,false);
+}
+function setNotes(on,drawer=on){
+  S.notes=on;$('#notesBtn').setAttribute('aria-pressed',on);$('#notes').hidden=!drawer;renderPins();
+}
+
+function render(){
+  renderHeader();
+  if(S.view==='home')renderHome();
+  if(S.view==='schedule')renderSchedule();
+  if(S.view==='enroll')renderEnroll();
+  if(S.view==='messages')renderMessages();
+  renderNotes();
+  renderPins();
+}
+
+/* ---------- search ---------- */
+let opts=[],act=-1;
+function searchResults(){
+  const q=S.q.trim().toLowerCase(),box=$('#results');
+  if(!q){box.hidden=true;$('#q').setAttribute('aria-expanded','false');return}
+  const mine=CUR.filter(c=>(c.code+' '+c.title).toLowerCase().includes(q));
+  const cat=CAT.filter(c=>(c.code+' '+c.title).toLowerCase().includes(q)).slice(0,5);
+  const pages=PAGES.filter(p=>(p.name+' '+p.k).toLowerCase().includes(q)).slice(0,4);
+  let h='';
+  if(mine.length)h+=`<div class="rgroup eyebrow">Your Fall 2026 classes</div>`+mine.map(c=>`<button class="ropt" data-r="mine:${c.code}"><span class="dot" style="background:var(${c.c})"></span><span class="rt"><b>${c.code} · ${esc(c.title)}</b><span>${dj(c.days,'/')} ${fmt(m(c.s))} · ${c.bldg} ${c.room}</span></span><span class="rkind">Schedule</span></button>`).join('');
+  if(cat.length)h+=`<div class="rgroup eyebrow">Spring 2027 classes</div>`+cat.map(c=>{const inCart=S.cart.includes(c.code);return `<div class="rrow"><button class="ropt" data-r="cat:${c.code}"><span class="rt"><b>${c.code} · ${esc(c.title)}</b><span>${dj(c.days,'/')} ${fmt(m(c.s))} – ${fmt(m(c.e))}</span></span></button><button class="btn sm" data-r="add:${c.code}" ${inCart?'disabled':''}>${inCart?'In cart':'Add'}</button></div>`}).join('');
+  if(pages.length)h+=`<div class="rgroup eyebrow">Pages</div>`+pages.map(p=>`<button class="ropt" data-r="page:${p.name}"><span class="rt"><b>${p.name}</b><span>${p.sub}</span></span><span class="rkind">Page</span></button>`).join('');
+  if(!h)h=`<div class="rempty">Nothing matches “${esc(S.q)}”. Try a course number (450), a subject (graphics), or a page (textbooks).</div>`;
+  else h+=`<div class="rfoot">Press Enter to see all Spring 2027 class results · Esc to close</div>`;
+  box.innerHTML=h;box.hidden=false;$('#q').setAttribute('aria-expanded','true');
+  opts=$$('#results [data-r]').filter(b=>!b.disabled);act=-1;
+}
+function runR(r){
+  const[k,v]=r.split(/:(.+)/);
+  closeSearch();
+  if(k==='mine'){go('schedule');toast('Showing '+v+' in your week')}
+  if(k==='cat'){go('enroll')}
+  if(k==='add'){if(!S.cart.includes(v))S.cart.push(v);S.validated=null;go('enroll');const c=cartConflicts().find(p=>p.some(x=>x.code===v));toast(c?`Added ${v}. It overlaps ${c.find(x=>x.code!==v).code}.`:`Added ${v} to your cart`)}
+  if(k==='page')openPage(v);
+}
+function closeSearch(){$('#results').hidden=true;$('#q').setAttribute('aria-expanded','false')}
+$('#q').addEventListener('input',e=>{S.q=e.target.value;searchResults();if(S.view==='enroll')renderEnroll(),renderPins()});
+$('#q').addEventListener('focus',searchResults);
+$('#q').addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!opts.length)return;act=(act+(e.key==='ArrowDown'?1:-1)+opts.length)%opts.length;opts.forEach((o,i)=>o.classList.toggle('active',i===act));opts[act].scrollIntoView({block:'nearest'})}
+  else if(e.key==='Enter'){e.preventDefault();if(act>=0)runR(opts[act].dataset.r);else if(S.q.trim()){closeSearch();go('enroll')}}
+  else if(e.key==='Escape'){closeSearch();e.target.blur()}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='/'&&!/input|textarea|select/i.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}
+  if(e.key==='Escape'&&!$('#notes').hidden)$('#notes').hidden=true;
+});
+
+/* ---------- delegated clicks ---------- */
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.search'))closeSearch();
+  const t=e.target.closest('[data-go],[data-page],[data-row],[data-add],[data-remove],[data-days],[data-msg],[data-jump],[data-status],[data-r]');
+  if(!t)return;
+  if(t.dataset.r!==undefined){runR(t.dataset.r);return}
+  if(t.dataset.go){go(t.dataset.go);return}
+  if(t.dataset.page){openPage(t.dataset.page);return}
+  if(t.dataset.row){const c=t.dataset.row;S.open.has(c)?S.open.delete(c):S.open.add(c);render();return}
+  if(t.dataset.add){S.cart.push(t.dataset.add);S.validated=null;render();const c=cartConflicts().find(p=>p.some(x=>x.code===t.dataset.add));toast(c?`Added ${t.dataset.add}. It overlaps ${c.find(x=>x.code!==t.dataset.add).code}.`:`Added ${t.dataset.add} to your cart`);return}
+  if(t.dataset.remove){S.cart=S.cart.filter(x=>x!==t.dataset.remove);S.validated=null;render();toast('Removed '+t.dataset.remove);return}
+  if(t.dataset.days){S.days=t.dataset.days;render();return}
+  if(t.dataset.msg!==undefined){S.msg=+t.dataset.msg;MSGS[S.msg].unread=false;render();return}
+  if(t.dataset.jump){jump(t.dataset.jump);return}
+  if(t.dataset.status){const s=t.dataset.status;if(s==='finances'||s==='messages')go(s);else toast(s==='holds'?'No holds on your account. Nothing blocks enrollment.':'Your to-do list is empty.');return}
+});
+$('#notesBtn').onclick=()=>setNotes(!S.notes);
+$('#notesClose').onclick=()=>{$('#notes').hidden=true};
+window.addEventListener('resize',()=>{if(S.notes)renderPins()});
+setInterval(()=>{if(S.clock==='real'&&(S.view==='home'||S.view==='schedule'))render()},60000);
+
+go('home');
+})();
+</script>
