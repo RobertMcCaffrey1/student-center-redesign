@@ -192,7 +192,7 @@ main{padding-block:24px 48px}
 .wk-col{position:relative;border-left:1px solid var(--line);background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% calc(100% / 10)}
 .wk-col.today{background-color:var(--gold-soft)}
 .blk{position:absolute;left:4px;right:4px;border-radius:6px;padding:4px 7px;font-size:12px;line-height:1.25;overflow:hidden;border-left:4px solid currentColor;background:var(--surface);box-shadow:0 1px 0 var(--line),0 0 0 1px var(--line)}
-.blk b{display:block;color:var(--ink);font-size:13px}
+.blk b{display:block;color:var(--ink);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .blk span{color:var(--muted)}
 .blk.conflict{background:var(--bad-soft);color:var(--bad)!important;box-shadow:0 0 0 1px var(--bad)}
 .nowline{position:absolute;left:0;right:0;height:2px;background:var(--bad);z-index:2}
@@ -247,22 +247,47 @@ main{padding-block:24px 48px}
 footer.foot{color:var(--muted);font-size:13px;padding-bottom:80px}
 
 /* ---------- design notes ---------- */
-.pin{position:absolute;top:-11px;right:-11px;width:26px;height:26px;border-radius:999px;border:2px solid var(--surface);background:var(--gold);color:var(--on-gold);font:800 13px/1 var(--display);display:grid;place-items:center;z-index:15;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-.pin:hover{transform:scale(1.1)}
+[data-note]>.pin{position:absolute;top:-11px;right:-11px;width:26px;height:26px;border-radius:999px;border:2px solid var(--surface);background:var(--gold);color:var(--on-gold);font:800 13px/1 var(--display);display:grid;place-items:center;z-index:15;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+[data-note]>.pin:hover{transform:scale(1.1)}
 .flash{animation:flash 1.6s ease-out}
 @keyframes flash{0%,40%{box-shadow:0 0 0 4px var(--gold)}100%{box-shadow:0 0 0 4px transparent}}
-aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:50;display:flex;flex-direction:column;box-shadow:-20px 0 50px rgba(0,0,0,.18);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:50;display:flex;flex-direction:column;box-shadow:-20px 0 50px rgba(0,0,0,.18);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
 .nhead{padding:18px 20px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .nhead h2{font-size:20px}
 .nhead p{margin:4px 0 0;font-size:14px;color:var(--muted)}
 .nbody{overflow:auto;padding:12px 20px 24px;display:flex;flex-direction:column;gap:10px}
 .note{border:1px solid var(--line);border-radius:10px;padding:14px;text-align:left;background:var(--surface);width:100%}
-.note:hover{border-color:var(--muted)}
 .note.hl{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
 .note-t{display:flex;gap:10px;align-items:center;margin-bottom:8px}
 .note-t .num{width:24px;height:24px;border-radius:999px;background:var(--gold);color:var(--on-gold);font:800 12px var(--display);display:grid;place-items:center;flex:none}
 .note-t b{font-family:var(--display);font-size:16px}
-.note dl{margin:0;display:grid;grid-template-columns:52px 1fr;gap:4px 10px;font-size:14px}
+.note dl{margin:0;display:grid;grid-template-columns:64px 1fr;gap:4px 10px;font-size:14px}
+.ntabs{display:flex;gap:20px;padding:0 20px;border-bottom:1px solid var(--line);flex:none}
+.ntab{border:0;background:none;padding:12px 0 10px;font-weight:700;font-size:15px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.ntab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+.nlead{margin:4px 0 2px;color:var(--muted);font-size:15px}
+.proc{list-style:none;counter-reset:pr;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.proc li{counter-increment:pr;display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:12px}
+.proc li::before{content:counter(pr);grid-row:span 3;width:28px;height:28px;border-radius:999px;background:var(--gold);color:var(--on-gold);font:800 13px/28px var(--display);text-align:center}
+.proc b{font-family:var(--display);font-size:16px}
+.proc p{margin:3px 0 0;font-size:14px;line-height:1.5}
+.proc .px{color:var(--muted)}
+.sev{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.sev4,.sev3{background:var(--bad-soft);color:var(--bad)}
+.sev2{background:var(--warn-soft);color:var(--warn)}
+.sev1,.sev0{background:var(--sunk);color:var(--muted)}
+.opts{margin-top:10px;font-size:14px}
+.olabel{font-weight:700;color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.opts ul{margin:6px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.opts li{padding:6px 10px;border-radius:6px;background:var(--sunk);color:var(--muted);line-height:1.45}
+.opts li.pick{background:var(--gold-soft);color:var(--ink)}
+.why{font-size:14px;margin:10px 0 0;line-height:1.5}
+.note-f{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:10px}
+.note-f .princ{margin-top:0}
+.modal{position:fixed;inset:0;z-index:70;background:rgba(10,10,9,.62);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal-in{background:var(--surface);border-radius:12px;width:min(1200px,100%);max-height:100%;overflow:auto;padding:12px 16px 16px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.modal-h{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;font-family:var(--display);font-size:17px}
+.modal-in img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:6px}
 .note dt{color:var(--muted);font-weight:700}
 .note dd{margin:0}
 .note .princ{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
@@ -434,11 +459,19 @@ aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);backgrou
 
 <aside class="notes" id="notes" hidden aria-label="Design notes">
   <div class="nhead">
-    <div><h2>Design notes</h2><p>Each numbered pin marks a fix for a usability issue in the original Student Center. Select a note to jump to it.</p></div>
+    <div><h2>Design notes</h2><p>How we chose what to build, and the reasoning behind each numbered pin on the page.</p></div>
     <button class="xbtn" id="notesClose" aria-label="Close design notes"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
+  <div class="ntabs" id="ntabs" role="tablist" aria-label="Design notes sections"></div>
   <div class="nbody" id="nbody"></div>
 </aside>
+
+<div class="modal" id="orig" hidden role="dialog" aria-modal="true" aria-label="Original Student Center home page">
+  <div class="modal-in">
+    <div class="modal-h"><b>Original Student Center home page</b><button class="xbtn" id="origClose" aria-label="Close original page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <img src="docs/before.png" alt="Screenshot of the original CSULB Student Center home page, Fall 2026" loading="lazy">
+  </div>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -504,22 +537,53 @@ const PAGES=[
  {name:'Weekly schedule',sub:'My schedule',k:'weekly schedule calendar week timetable',go:'schedule'},
  {name:'Messages',sub:'Inbox',k:'messages inbox mail notifications',go:'messages'}
 ];
+/* How we narrowed the options: the five filters, applied in order */
+const PROCESS=[
+ {t:'Start from users and their tasks',d:'Who: an upper-division CSULB student planning next semester. Tasks: find when they can enroll, find their next class, build a Spring cart with no conflicts, and confirm nothing blocks them.',x:'Ideas that help none of these tasks were cut, such as a chatbot, custom themes, and a GPA calculator.'},
+ {t:'Find problems with evidence, not taste',d:'We ran a heuristic evaluation of the current page against Nielsen’s 10 usability heuristics and found 11 issues. Each got a severity rating from 0 (not a problem) to 4 (usability catastrophe).',x:'Severity set the build order and how far each fix could go. High-severity issues got new features; low-severity ones got the lightest fix that works.'},
+ {t:'Use principles to choose between fixes',d:'Most issues had several workable fixes. We wrote the options down and picked the one that best satisfied the violated principle without breaking another one.',x:'Each decision card lists the options we weighed and why the others lost.'},
+ {t:'Keep what already works',d:'We kept CSULB’s gold and black and the Student Center’s own terms, like Shopping cart and Enrollment appointment, so returning students don’t have to relearn the page.',x:'Consistency applies to the system people already know, not only to the web at large.'},
+ {t:'Test with students, then change it',d:'Both versions get the same six tasks with five students, measuring time on task, errors, and System Usability Scale (SUS) scores. The protocol is in docs/usability-test.md.',x:'Changed after review so far: overlapping classes on the cart calendar were unreadable, so an overlap became one labeled block; the design notes button looked like part of the product, so it moved out of the header. [Add changes from user testing.]'}
+];
+/* One decision record per usability issue: need, problem, severity (0-4), options weighed, why */
 const NOTES=[
- {n:1,view:null,t:'One search box',before:'A gold “Search for Classes” button and a “Search” link in the Academics menu. Two entry points with no hint of how they differ.',after:'One search field in the header finds classes and pages. Press / to jump to it from anywhere.',p:['Consistency and standards','Flexibility and efficiency of use']},
- {n:2,view:null,t:'Visible navigation',before:'Two hamburger icons on section headers hid menus that repeated links already on the page.',after:'Five labeled tabs that are always visible, with the current page underlined.',p:['Recognition rather than recall','Signifiers (Norman)']},
- {n:3,view:'home',t:'Status at a glance',before:'“Holds” and “To Do List” each took a full panel to say “No Holds.” and “No To Do’s.”',after:'One row of status chips. A chip only gets an accent color when it needs action.',p:['Aesthetic and minimalist design','Visibility of system status']},
- {n:4,view:'home',t:'Enrollment timeline',before:'The Nov 5 enrollment appointment sat in a paragraph at the bottom of the sidebar.',after:'A countdown and a three-step timeline, with the next action as the primary button.',p:['Visibility of system status','Match between system and the real world']},
- {n:5,view:'home',t:'Plain language',before:'Course codes only, the abbreviation “SEM”, and an unexplained “URL” label.',after:'Course titles under each code, “Seminar” spelled out, and the jargon label removed.',p:['Match between system and the real world']},
- {n:6,view:'home',t:'Deadlines in words',before:'An identical calendar icon on every row. You had to click each one to learn anything.',after:'The next deadline is written on each row. Expand a row to see the full list.',p:['Recognition rather than recall','Information scent']},
- {n:7,view:'home',t:'Today first',before:'A static table sorted by course code. You had to work out which class came next.',after:'An “In class now / Up next” card with the room and time remaining.',p:['User-centered task priority','Visibility of system status']},
- {n:8,view:'enroll',t:'Conflicts caught early',before:'Time conflicts only surfaced when you validated or tried to enroll. Nothing said when Enroll would work.',after:'The cart flags overlaps the moment you add a class and shows them on a mini calendar. Enroll states when it unlocks.',p:['Error prevention','Help users recognize and recover from errors']},
- {n:9,view:null,t:'Unread count',before:'“View My Messages” looked the same whether or not anything was new.',after:'A badge on the inbox icon and the Messages tab shows the unread count.',p:['Visibility of system status']},
- {n:10,view:'home',t:'Links grouped by task',before:'One flat menu mixed planning, enrollment, and textbooks. Enrollment features were split across three places.',after:'Shortcuts grouped under Plan, Change my classes, and Money.',p:['Gestalt: proximity','Information architecture']},
- {n:11,view:'schedule',t:'Week view',before:'Meeting times only as text, like “TuTh 3:30PM – 4:45PM”.',after:'A weekly calendar with today highlighted and a line at the current time.',p:['Match between system and the real world']}
+ {n:1,view:null,sev:2,t:'One search box',need:'Find a class or a page without knowing where it lives.',before:'A gold “Search for Classes” button and a “Search” link in the Academics menu, with no hint of how they differ.',
+  opts:[['Keep both and label them, e.g. “Search classes” and “Search catalog”. Students still have to choose between two tools they can’t tell apart.',0],['Keep only the class search button. Pages like Textbooks stay hard to find.',0],['One search box in the header for classes and pages, results grouped by type, with an Add button on each class.',1]],
+  why:'One way to do one thing. Grouped results keep classes and pages distinct, so nothing is lost by merging the boxes, and Add in the results saves a trip to another page.',p:['Consistency and standards','Recognition rather than recall','Flexibility and efficiency of use']},
+ {n:2,view:null,sev:2,t:'Visible navigation',need:'Know what’s available and where you are.',before:'Two hamburger icons on section headers hid menus that repeated links already on the page.',
+  opts:[['Keep the hamburger menus. Hidden options have to be remembered or hunted for.',0],['A left sidebar. Takes width the dashboard needs, and collapses back into a hamburger on phones.',0],['Five labeled tabs under the header, current page underlined, scrolling sideways on phones.',1]],
+  why:'Five destinations fit as tabs, so nothing needs to hide. A visible label is a signifier: three lines tell you a menu exists, not what is in it.',p:['Recognition rather than recall','Signifiers (Norman)']},
+ {n:3,view:'home',sev:1,t:'Status at a glance',need:'Confirm nothing blocks enrollment.',before:'“Holds” and “To Do List” each took a full panel to say “No Holds.” and “No To Do’s.”',
+  opts:[['Hide the panels when empty. Saves space, but students lose the reassurance that nothing is blocking them.',0],['Keep the panels. Two large boxes for two empty states.',0],['A row of four status chips: a green check when fine, and the gold accent only on a chip that needs action.',1]],
+  why:'Keeps the information in a quarter of the space. Color is saved for exceptions, so the one thing that needs attention stands out instead of competing with everything else.',p:['Aesthetic and minimalist design','Visibility of system status']},
+ {n:4,view:'home',sev:3,t:'Enrollment timeline',need:'Know when you can enroll and what to do before then.',before:'The Nov 5 enrollment appointment was one sentence at the bottom of the sidebar.',
+  opts:[['A banner across the top. Easy to tune out, and it doesn’t show what comes before enrollment.',0],['An email reminder. Lives outside the page, among many other emails.',0],['A countdown card with the three real steps (cart opens, plan, enroll) and the next action as the main button.',1]],
+  why:'Enrollment is a process with steps, so the card shows the steps and where the student is in them. The countdown answers the most common question at a glance.',p:['Visibility of system status','Match between system and the real world']},
+ {n:5,view:'home',sev:2,t:'Plain language',need:'Recognize classes by name.',before:'Course codes only, the abbreviation “SEM”, and an unexplained “URL” label.',
+  opts:[['Show the title in a tooltip on the code. Needs hover, so it fails on phones, and the code alone still has to be decoded.',0],['Course title under every code, “Seminar” spelled out, and the “URL” label removed.',1]],
+  why:'Students think in course names, not catalog numbers. Text that is always visible beats text you have to go looking for.',p:['Match between system and the real world']},
+ {n:6,view:'home',sev:3,t:'Deadlines in words',need:'Know the next deadline that affects you.',before:'An identical calendar icon on every class row. You had to click each one to learn anything.',
+  opts:[['Keep the icon and add a tooltip. Same problem on phones, and deadlines stay one interaction away.',0],['A separate Deadlines page. Moves the information away from the class it belongs to.',0],['Write the next deadline on each row, and expand the row for the full list.',1]],
+  why:'Identical icons carry no information, so they can’t be scanned. Showing the next deadline and keeping the rest one click away is progressive disclosure: the common answer is visible, the details are available.',p:['Recognition rather than recall','Progressive disclosure']},
+ {n:7,view:'home',sev:2,t:'Today first',need:'Find where you need to be next.',before:'A static table sorted by course code. You had to work out which class came next.',
+  opts:[['Sort the table by time. Still a table to read, with every day mixed together.',0],['Highlight the current row. Only helps during class.',0],['An “In class now / Up next” card above the class list, with the room and time left.',1]],
+  why:'“Where am I going next?” is the question asked most often, so it gets the top of the page. The full list stays below for an overview.',p:['Visibility of system status','Task-centered design']},
+ {n:8,view:'enroll',sev:4,t:'Conflicts caught early',need:'Build a Spring schedule that will actually enroll.',before:'Time conflicts only surfaced when you validated or tried to enroll, often on appointment day.',
+  opts:[['Warn only at enrollment, as today. The error shows up at the worst possible moment.',0],['Block adding a class that conflicts. Too rigid: students often add two sections to compare them.',0],['Allow it, warn the moment it’s added, show the overlap on a mini calendar, and lock Enroll until it’s fixed.',1]],
+  why:'Prevent the error early without taking control away. Students can still compare overlapping options but can’t enroll in a broken schedule, and the message names both classes and says how to fix it.',p:['Error prevention','User control and freedom','Help users recognize and recover from errors']},
+ {n:9,view:null,sev:2,t:'Unread count',need:'Notice messages that need action.',before:'“View My Messages” looked the same whether or not anything was new.',
+  opts:[['A pop-up alert on login. Interrupts every visit.',0],['A count badge on the inbox icon and the Messages tab.',1]],
+  why:'A badge reports status without interrupting. It appears only when something is new and clears once the message is read.',p:['Visibility of system status']},
+ {n:10,view:'home',sev:1,t:'Links grouped by task',need:'Find less frequent pages like Degree Planner or Financial Aid.',before:'One flat menu mixed planning, enrollment, and textbooks. Enrollment features were split across three places.',
+  opts:[['An alphabetical list. Easy to build, but people look for tasks, not words.',0],['Shortcuts grouped under Plan, Change my classes, and Money.',1]],
+  why:'Items placed together read as related, and grouping by the task a student has in mind shortens the search. A card sort with students would confirm the groups.',p:['Gestalt: proximity','Information architecture']},
+ {n:11,view:'schedule',sev:1,t:'Week view',need:'See the shape of your week.',before:'Meeting times only as text, like “TuTh 3:30PM – 4:45PM”.',
+  opts:[['Keep the text list. Students have to assemble the week in their heads.',0],['A weekly calendar grid with today highlighted and a line at the current time.',1]],
+  why:'A week is a grid on every paper planner, so the screen should match. A grid shows gaps and long days that text hides.',p:['Match between system and the real world','Mapping (Norman)']}
 ];
 
 /* ---------- state ---------- */
-const S={view:'home',q:'',days:'all',cart:['CECS 491B','CECS 428'],enrolled:[],open:new Set(),notes:false,clock:'real',msg:0,validated:null};
+const S={view:'home',q:'',days:'all',cart:['CECS 491B','CECS 428'],enrolled:[],open:new Set(),notes:false,ntab:'process',clock:'real',msg:0,validated:null};
 try{const c=localStorage.getItem('sc-clock');if(c)S.clock=c;}catch(e){}
 
 const CLOCKS={
@@ -640,7 +704,7 @@ function renderHome(){
 
 function weekHTML(items,opts={}){
   const d=now(),wd=d.getDay(),mins=d.getHours()*60+d.getMinutes();
-  const H0=480,H1=1080,span=H1-H0,height=opts.compact?380:620;
+  const H0=480,H1=1080,span=H1-H0,height=opts.compact?420:620;
   const labels=['Mon','Tue','Wed','Thu','Fri'];
   let h=`<div class="wk${opts.compact?' compact':''}" role="img" aria-label="${opts.aria||'Weekly schedule'}"><div></div>`;
   labels.forEach((l,i)=>{const td=(i+1)===wd&&!opts.compact;h+=`<div class="wk-dh${td?' today':''}">${td?`<span>${l}</span>`:l}</div>`});
@@ -650,10 +714,22 @@ function weekHTML(items,opts={}){
   for(let day=1;day<=5;day++){
     const td=day===wd&&!opts.compact;
     h+=`<div class="wk-col${td?' today':''}" style="height:${height}px">`;
-    items.filter(c=>c.days.some(x=>DAYN[x]===day)).forEach(c=>{
+    const dayItems=items.filter(c=>c.days.some(x=>DAYN[x]===day));
+    const drawn=new Set();
+    dayItems.forEach(c=>{
+      if(drawn.has(c))return;
+      const grp=dayItems.filter(o=>m(o.s)<m(c.e)&&m(c.s)<m(o.e));
+      if(opts.compact&&grp.length>1){
+        grp.forEach(o=>drawn.add(o));
+        const gs=Math.min(...grp.map(o=>m(o.s))),ge=Math.max(...grp.map(o=>m(o.e)));
+        h+=`<div class="blk conflict" style="top:${(gs-H0)/span*100}%;height:${(ge-gs)/span*100}%" title="${grp.map(o=>o.code).join(' and ')} overlap">${grp.map(o=>`<b>${o.code.replace('CECS ','')}</b>`).join('')}</div>`;
+        return;
+      }
       const top=(m(c.s)-H0)/span*100,ht=(m(c.e)-m(c.s))/span*100;
       const cf=opts.conflicts&&opts.conflicts.has(c.code);
-      h+=`<div class="blk${cf?' conflict':''}" style="top:${top}%;height:${ht}%;color:var(${c.c||'--gold-ink'})"><b>${c.code}</b><span>${opts.compact?'':esc(c.title)+'<br>'}${fmt(m(c.s))}${opts.compact?'':' · '+c.bldg+' '+c.room}</span></div>`;
+      const lane=dayItems.filter(o=>m(o.s)<m(c.e)&&m(c.s)<m(o.e)),n=lane.length,li=lane.indexOf(c);
+      const pos=n>1?`left:calc(${li*100/n}% + 3px);width:calc(${100/n}% - 6px);right:auto;`:'';
+      h+=`<div class="blk${cf?' conflict':''}" style="${pos}top:${top}%;height:${ht}%;color:var(${c.c||'--gold-ink'})" title="${c.code} · ${esc(c.title)}"><b>${opts.compact?c.code.replace('CECS ',''):c.code}</b><span>${opts.compact?'':esc(c.title)+'<br>'}${fmt(m(c.s))}${opts.compact?'':' · '+c.bldg+' '+c.room}</span></div>`;
     });
     if(td&&mins>=H0&&mins<=H1)h+=`<div class="nowline" style="top:${(mins-H0)/span*100}%" aria-hidden="true"></div>`;
     h+='</div>';
@@ -721,12 +797,27 @@ function renderMessages(){
   $('#mread').innerHTML=`<h2>${esc(x.subj)}</h2><div class="from">${esc(x.from)} · ${x.date}</div><p>${esc(x.body)}</p>${x.id<2?`<div class="btnrow" style="margin-top:16px"><button class="btn" data-go="enroll">Go to shopping cart</button></div>`:''}`;
 }
 
+const SEVNAME=['Not a problem','Cosmetic','Minor','Major','Catastrophe'];
 function renderNotes(){
-  $('#nbody').innerHTML=`<div class="democlock"><label for="clocksel"><b>Demo clock</b><br><span style="color:var(--muted)">Set the time for a live demo so “In class now” and the enrollment countdown show what you want.</span></label>
-  <select id="clocksel">${Object.entries(CLOCKS).map(([k,v])=>`<option value="${k}"${S.clock===k?' selected':''}>${v.label}</option>`).join('')}</select></div>`+
-  NOTES.map(n=>`<button class="note" data-jump="${n.n}" id="note-${n.n}"><div class="note-t"><span class="num">${n.n}</span><b>${n.t}</b></div>
-  <dl><dt>Before</dt><dd>${n.before}</dd><dt>After</dt><dd>${n.after}</dd></dl>
-  <div class="princ">${n.p.map(p=>`<span class="pill plain">${p}</span>`).join('')}</div></button>`).join('');
+  const nb=$('#nbody'),st=nb.scrollTop;
+  $('#ntabs').innerHTML=[['process','How we decided'],['decisions','Decisions ('+NOTES.length+')']].map(([k,l])=>`<button class="ntab" role="tab" data-ntab="${k}" aria-selected="${S.ntab===k}">${l}</button>`).join('');
+  let body;
+  if(S.ntab==='process'){
+    body=`<p class="nlead">There are endless ways to build any screen. We used five filters, in this order, to decide what to build and how.</p>
+    <ol class="proc">${PROCESS.map(p=>`<li><b>${p.t}</b><p>${p.d}</p><p class="px">${p.x}</p></li>`).join('')}</ol>
+    <div class="btnrow"><button class="btn sm" data-orig="1">View the original page</button><button class="btn sm" data-ntab="decisions">See all ${NOTES.length} decisions</button></div>`;
+  }else{
+    body=NOTES.map(n=>`<article class="note" id="note-${n.n}">
+      <div class="note-t"><span class="num">${n.n}</span><b>${n.t}</b><span class="sev sev${n.sev}" title="Severity ${n.sev} of 4: ${SEVNAME[n.sev]}">Severity ${n.sev}</span></div>
+      <dl><dt>Need</dt><dd>${n.need}</dd><dt>Problem</dt><dd>${n.before}</dd></dl>
+      <div class="opts"><span class="olabel">Options we weighed</span><ul>${n.opts.map(o=>`<li class="${o[1]?'pick':''}">${o[1]?'<b>Chosen.</b> ':''}${o[0]}</li>`).join('')}</ul></div>
+      <p class="why"><b>Why:</b> ${n.why}</p>
+      <div class="note-f"><div class="princ">${n.p.map(p=>`<span class="pill plain">${p}</span>`).join('')}</div><button class="link" data-jump="${n.n}" style="font-size:14px;white-space:nowrap">Show on page</button></div>
+    </article>`).join('');
+  }
+  nb.innerHTML=body+`<div class="democlock"><label for="clocksel"><b>Demo clock</b><br><span style="color:var(--muted)">Set the time for a live demo so “In class now” and the enrollment countdown show what you want.</span></label>
+  <select id="clocksel">${Object.entries(CLOCKS).map(([k,v])=>`<option value="${k}"${S.clock===k?' selected':''}>${v.label}</option>`).join('')}</select></div>`;
+  nb.scrollTop=st;
   $('#clocksel').onchange=e=>setClock(e.target.value);
 }
 
@@ -742,8 +833,9 @@ function renderPins(){
   });
 }
 function openNote(n){
+  if(S.ntab!=='decisions'){S.ntab='decisions';renderNotes()}
   $('#notes').hidden=false;
-  $$('.note').forEach(x=>x.classList.toggle('hl',x.dataset.jump==String(n)));
+  $$('.note').forEach(x=>x.classList.toggle('hl',x.id==='note-'+n));
   const el=$('#note-'+n);el&&el.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 function jump(n){
@@ -751,7 +843,7 @@ function jump(n){
   if(note.view&&S.view!==note.view)go(note.view);
   const el=document.querySelector(`[data-note="${n}"]`);
   if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
-  $$('.note').forEach(x=>x.classList.toggle('hl',x.dataset.jump==String(n)));
+  $$('.note').forEach(x=>x.classList.toggle('hl',x.id==='note-'+n));
   if(window.innerWidth<700)setNotes(true,false);
 }
 function setNotes(on,drawer=on){
@@ -803,6 +895,7 @@ $('#q').addEventListener('keydown',e=>{
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='/'&&!/input|textarea|select/i.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}
+  if(e.key==='Escape'&&!$('#orig').hidden){$('#orig').hidden=true;return}
   if(e.key==='Escape'&&!$('#notes').hidden)$('#notes').hidden=true;
   if((e.key==='n'||e.key==='N')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!/input|textarea|select/i.test(document.activeElement.tagName))setNotes(!S.notes);
 });
@@ -810,8 +903,10 @@ document.addEventListener('keydown',e=>{
 /* ---------- delegated clicks ---------- */
 document.addEventListener('click',e=>{
   if(!e.target.closest('.search'))closeSearch();
-  const t=e.target.closest('[data-go],[data-page],[data-row],[data-add],[data-remove],[data-days],[data-msg],[data-jump],[data-status],[data-r]');
+  const t=e.target.closest('[data-go],[data-page],[data-row],[data-add],[data-remove],[data-days],[data-msg],[data-jump],[data-status],[data-r],[data-ntab],[data-orig]');
   if(!t)return;
+  if(t.dataset.ntab){S.ntab=t.dataset.ntab;renderNotes();$('#nbody').scrollTop=0;return}
+  if(t.dataset.orig){$('#orig').hidden=false;$('#origClose').focus();return}
   if(t.dataset.r!==undefined){runR(t.dataset.r);return}
   if(t.dataset.go){go(t.dataset.go);return}
   if(t.dataset.page){openPage(t.dataset.page);return}
@@ -825,6 +920,8 @@ document.addEventListener('click',e=>{
 });
 $('#notesBtn').onclick=()=>setNotes(!S.notes);
 $('#notesClose').onclick=()=>{$('#notes').hidden=true};
+$('#origClose').onclick=()=>{$('#orig').hidden=true};
+$('#orig').addEventListener('click',e=>{if(e.target.id==='orig')$('#orig').hidden=true});
 window.addEventListener('resize',()=>{if(S.notes)renderPins()});
 setInterval(()=>{if(S.clock==='real'&&(S.view==='home'||S.view==='schedule'))render()},60000);
 
