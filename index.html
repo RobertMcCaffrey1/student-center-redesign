@@ -1,5 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="CECS 448 Project 2: a user-centered redesign of the CSULB Student Center home page and enrollment cart.">
 <title>Student Center Redesign</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -30,7 +35,9 @@
   --c1:#6FA6E0; --c2:#E8834C; --c3:#9CC266; --c4:#B78EDB; color-scheme:dark}
 
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--body)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--band)}
 h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
 button{font:inherit;color:inherit;cursor:pointer}
@@ -315,7 +322,8 @@ aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);backgrou
 @media (max-width:420px){.status{grid-template-columns:minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-
+</head>
+<body>
 <header class="top">
   <div class="wrap">
     <div class="hrow">
@@ -928,3 +936,5 @@ setInterval(()=>{if(S.clock==='real'&&(S.view==='home'||S.view==='schedule'))ren
 go('home');
 })();
 </script>
+</body>
+</html>
