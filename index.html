@@ -66,7 +66,18 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 .iconbtn{position:relative;width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:var(--band-ink);display:grid;place-items:center}
 .iconbtn:hover{background:var(--band-field)}
 .badge{position:absolute;top:4px;right:2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--gold);color:var(--on-gold);font:700 12px/20px var(--body);text-align:center}
-.notes-fab{position:fixed;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:14px;font-weight:700;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.14)}
+.presenter{position:fixed;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:45;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 32px)}
+.engine-chip{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.10)}
+.engine-chip.ready{color:var(--ok);border-color:var(--ok)}
+.edot{width:8px;height:8px;border-radius:999px;background:currentColor;flex:none}
+.engine-chip.loading .edot{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.engine-box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px}
+.engine-box b{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:15px}
+.engine-box p{margin:6px 0 0;line-height:1.5;color:var(--muted)}
+.engine-box.ready{border-color:var(--ok);background:var(--ok-soft)}
+.engine-box.ready b{color:var(--ok)}
+.notes-fab{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:14px;font-weight:700;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.14)}
 .notes-fab:hover{color:var(--ink);border-color:var(--muted)}
 .notes-fab[aria-pressed="true"]{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
 .notes-fab kbd{font:500 11px var(--mono);border:1px solid currentColor;border-radius:4px;padding:0 5px;opacity:.65}
@@ -457,13 +468,16 @@ aside.notes{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);backgrou
 </main>
 
 <footer class="foot wrap">
-  CECS 448 Project 2 prototype. Course titles, times, and rooms come from CSULB's Fall 2026 class schedule. Deadlines, messages, and Spring 2027 sections are sample data for demonstration.
+  CECS 448 Project 2 prototype. Course titles, times, and rooms come from CSULB's Fall 2026 class schedule. Deadlines, messages, and Spring 2027 sections are sample data for demonstration. Cart checks and search ranking run in Python (logic.py) through Pyodide.
 </footer>
 
+<div class="presenter">
 <button class="notes-fab" id="notesBtn" aria-pressed="false" aria-controls="notes" title="Show design notes (N)">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
   Design notes <kbd>N</kbd>
 </button>
+<button class="engine-chip loading" id="engineChip" title="Show how Python is used">Loading Python…</button>
+</div>
 
 <aside class="notes" id="notes" hidden aria-label="Design notes">
   <div class="nhead">
@@ -609,10 +623,32 @@ const enrollOpen=()=>now()>=APPT;
 
 const byCode=c=>CAT.find(x=>x.code===c);
 const overlap=(a,b)=>a.days.some(d=>b.days.includes(d))&&m(a.s)<m(b.e)&&m(b.s)<m(a.e);
+
+/* ---------- logic engine ----------
+   Conflict detection, the cart check, and search ranking run in Python (logic.py, loaded
+   with Pyodide at the bottom of this file). Until Python is ready, or if it can't load,
+   these JavaScript versions give the same answers. */
+const jsScore=(query,code,title,kw='')=>{
+  const q=query.toLowerCase().split(/\s+/).filter(Boolean).join(' ');if(!q)return 0;
+  const c=code.toLowerCase(),num=c?c.split(' ').pop():'',hay=`${c} ${title.toLowerCase()} ${kw.toLowerCase()}`;
+  if(q===num||q===c)return 100;
+  if((num&&num.startsWith(q))||(c&&c.startsWith(q)))return 90;
+  if(title.toLowerCase().split(/\s+/).some(w=>w.startsWith(q)))return 70;
+  if(hay.includes(q))return 50;
+  if(q.split(' ').every(w=>hay.includes(w)))return 40;
+  return 0;
+};
+const jsRank=(q,items,isCode,kwKey)=>items.map((it,i)=>[jsScore(q,isCode?it.code:'',isCode?it.title:it.name,kwKey?it[kwKey]:''),i,it]).filter(x=>x[0]).sort((a,b)=>b[0]-a[0]||a[1]-b[1]).map(x=>x[2]);
+const JS_ENGINE={
+  find_conflicts:({cart})=>{const p=[];for(let i=0;i<cart.length;i++)for(let j=i+1;j<cart.length;j++)if(overlap(cart[i],cart[j]))p.push([cart[i].code,cart[j].code]);return p},
+  catalog_clashes:({cart,catalog})=>{const inC=new Set(cart.map(c=>c.code)),r={};catalog.forEach(c=>{if(inC.has(c.code))return;const h=cart.find(x=>overlap(c,x));if(h)r[c.code]=h.code});return r},
+  check_cart:({cart,holds})=>{const conflicts=JS_ENGINE.find_conflicts({cart}),np=cart.filter(c=>c.consent).map(c=>c.code);return{status:conflicts.length||holds.length?'bad':np.length?'warn':'ok',conflicts,holds,needs_permission:np}},
+  search:({query,mine,catalog,pages})=>({mine:jsRank(query,mine,true).map(c=>c.code),catalog:jsRank(query,catalog,true).map(c=>c.code),pages:jsRank(query,pages,false,'k').map(p=>p.name)})
+};
+const ENGINE={lang:'JavaScript',status:'loading',version:'',call:(n,a)=>JS_ENGINE[n](a)};
+
 function cartConflicts(){
-  const items=S.cart.map(byCode), pairs=[];
-  for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++)if(overlap(items[i],items[j]))pairs.push([items[i],items[j]]);
-  return pairs;
+  return ENGINE.call('find_conflicts',{cart:S.cart.map(byCode)}).map(([a,b])=>[byCode(a),byCode(b)]);
 }
 
 /* ---------- toast ---------- */
@@ -754,11 +790,13 @@ function renderEnroll(){
   $('#qnote').innerHTML=q?`Showing results for <b style="color:var(--ink)">“${esc(S.q)}”</b> <button class="link" id="clearq">Clear search</button>`:'Use the search box at the top to narrow this list.';
   if(q)$('#clearq').onclick=()=>{S.q='';$('#q').value='';render()};
   const daysOk=c=>S.days==='all'||(S.days==='MW'&&c.days.includes('Mo'))||(S.days==='TT'&&c.days.includes('Tu'))||(S.days==='F'&&c.days.includes('Fr'));
-  const list=CAT.filter(c=>daysOk(c)&&(!q||(c.code+' '+c.title).toLowerCase().includes(q)));
+  const ranked=q?ENGINE.call('search',{query:S.q,mine:[],catalog:CAT,pages:[]}).catalog.map(byCode):CAT;
+  const list=ranked.filter(daysOk);
   const cartItems=S.cart.map(byCode);
+  const clashes=ENGINE.call('catalog_clashes',{cart:cartItems,catalog:list});
   $('#cat').innerHTML=list.length?list.map(c=>{
     const inCart=S.cart.includes(c.code),done=S.enrolled.includes(c.code);
-    const clash=!inCart&&cartItems.find(x=>overlap(x,c));
+    const clash=!inCart&&clashes[c.code]?byCode(clashes[c.code]):null;
     return `<div class="catrow"><div style="min-width:0"><b>${c.code} · ${esc(c.title)}</b>
       <div class="meta tnum">${dj(c.days)} ${fmt(m(c.s))} – ${fmt(m(c.e))} · ${c.bldg} ${c.room} · ${c.units} units</div>
       ${clash||c.consent?`<div class="flags">${clash?`<span class="pill bad">${ICON.warn} Overlaps ${clash.code}</span>`:''}${c.consent?'<span class="pill warn">Instructor consent required</span>':''}</div>`:''}</div>
@@ -778,9 +816,10 @@ function renderEnroll(){
   $('#cart').innerHTML=h;
 
   $('#validate').onclick=()=>{
-    const p=cartConflicts(),cons=S.cart.map(byCode).filter(c=>c.consent);
-    if(p.length)S.validated={type:'bad',msg:'<b>Not ready.</b> Fix the time conflict above before your appointment.'};
-    else if(cons.length)S.validated={type:'warn',msg:`<b>Almost ready.</b> ${cons.map(c=>c.code).join(', ')} needs a permission number from the instructor. Everything else can be enrolled.`};
+    const r=ENGINE.call('check_cart',{cart:S.cart.map(byCode),holds:[]});
+    if(r.conflicts.length)S.validated={type:'bad',msg:'<b>Not ready.</b> Fix the time conflict above before your appointment.'};
+    else if(r.holds.length)S.validated={type:'bad',msg:`<b>Not ready.</b> Clear this hold first: ${esc(r.holds.join(', '))}.`};
+    else if(r.needs_permission.length)S.validated={type:'warn',msg:`<b>Almost ready.</b> ${r.needs_permission.join(', ')} needs a permission number from the instructor. Everything else can be enrolled.`};
     else S.validated={type:'ok',msg:'<b>Ready to enroll.</b> No conflicts, no holds, and no missing permissions.'};
     render();
   };
@@ -805,6 +844,20 @@ function renderMessages(){
   $('#mread').innerHTML=`<h2>${esc(x.subj)}</h2><div class="from">${esc(x.from)} · ${x.date}</div><p>${esc(x.body)}</p>${x.id<2?`<div class="btnrow" style="margin-top:16px"><button class="btn" data-go="enroll">Go to shopping cart</button></div>`:''}`;
 }
 
+function engineHTML(){
+  const st=ENGINE.status;
+  const head=st==='ready'?`Python ${ENGINE.version} is running`:st==='loading'?'Loading Python…':'Python is not available here';
+  const body=st==='ready'?'The time-conflict check, the “Check my cart” result, and search ranking are computed by <b>logic.py</b>, running in the browser through Pyodide.'
+   :st==='loading'?'Pyodide is downloading (about 10 MB the first time). The page uses matching JavaScript logic until it’s ready.'
+   :`Python isn’t running in this copy${ENGINE.why?' ('+esc(ENGINE.why)+')':''}, so the page is using its JavaScript fallback, which gives the same results. Open the GitHub Pages link to run the Python version.`;
+  return `<div class="engine-box ${st}"><b><span class="edot"></span>${head}</b><p>${body}</p></div>`;
+}
+function renderEngineChip(){
+  const c=$('#engineChip');if(!c)return;
+  c.hidden=ENGINE.status==='unavailable';
+  c.className='engine-chip '+ENGINE.status;
+  c.innerHTML=`<span class="edot"></span>${ENGINE.status==='ready'?'Python '+ENGINE.version:'Loading Python…'}`;
+}
 const SEVNAME=['Not a problem','Cosmetic','Minor','Major','Catastrophe'];
 function renderNotes(){
   const nb=$('#nbody'),st=nb.scrollTop;
@@ -823,7 +876,7 @@ function renderNotes(){
       <div class="note-f"><div class="princ">${n.p.map(p=>`<span class="pill plain">${p}</span>`).join('')}</div><button class="link" data-jump="${n.n}" style="font-size:14px;white-space:nowrap">Show on page</button></div>
     </article>`).join('');
   }
-  nb.innerHTML=body+`<div class="democlock"><label for="clocksel"><b>Demo clock</b><br><span style="color:var(--muted)">Set the time for a live demo so “In class now” and the enrollment countdown show what you want.</span></label>
+  nb.innerHTML=body+engineHTML()+`<div class="democlock"><label for="clocksel"><b>Demo clock</b><br><span style="color:var(--muted)">Set the time for a live demo so “In class now” and the enrollment countdown show what you want.</span></label>
   <select id="clocksel">${Object.entries(CLOCKS).map(([k,v])=>`<option value="${k}"${S.clock===k?' selected':''}>${v.label}</option>`).join('')}</select></div>`;
   nb.scrollTop=st;
   $('#clocksel').onchange=e=>setClock(e.target.value);
@@ -860,6 +913,7 @@ function setNotes(on,drawer=on){
 
 function render(){
   renderHeader();
+  renderEngineChip();
   if(S.view==='home')renderHome();
   if(S.view==='schedule')renderSchedule();
   if(S.view==='enroll')renderEnroll();
@@ -873,9 +927,10 @@ let opts=[],act=-1;
 function searchResults(){
   const q=S.q.trim().toLowerCase(),box=$('#results');
   if(!q){box.hidden=true;$('#q').setAttribute('aria-expanded','false');return}
-  const mine=CUR.filter(c=>(c.code+' '+c.title).toLowerCase().includes(q));
-  const cat=CAT.filter(c=>(c.code+' '+c.title).toLowerCase().includes(q)).slice(0,5);
-  const pages=PAGES.filter(p=>(p.name+' '+p.k).toLowerCase().includes(q)).slice(0,4);
+  const r=ENGINE.call('search',{query:S.q,mine:CUR,catalog:CAT,pages:PAGES});
+  const mine=r.mine.map(c=>CUR.find(x=>x.code===c));
+  const cat=r.catalog.slice(0,5).map(byCode);
+  const pages=r.pages.slice(0,4).map(n=>PAGES.find(p=>p.name===n));
   let h='';
   if(mine.length)h+=`<div class="rgroup eyebrow">Your Fall 2026 classes</div>`+mine.map(c=>`<button class="ropt" data-r="mine:${c.code}"><span class="dot" style="background:var(${c.c})"></span><span class="rt"><b>${c.code} · ${esc(c.title)}</b><span>${dj(c.days,'/')} ${fmt(m(c.s))} · ${c.bldg} ${c.room}</span></span><span class="rkind">Schedule</span></button>`).join('');
   if(cat.length)h+=`<div class="rgroup eyebrow">Spring 2027 classes</div>`+cat.map(c=>{const inCart=S.cart.includes(c.code);return `<div class="rrow"><button class="ropt" data-r="cat:${c.code}"><span class="rt"><b>${c.code} · ${esc(c.title)}</b><span>${dj(c.days,'/')} ${fmt(m(c.s))} – ${fmt(m(c.e))}</span></span></button><button class="btn sm" data-r="add:${c.code}" ${inCart?'disabled':''}>${inCart?'In cart':'Add'}</button></div>`}).join('');
@@ -927,6 +982,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.status){const s=t.dataset.status;if(s==='finances'||s==='messages')go(s);else toast(s==='holds'?'No holds on your account. Nothing blocks enrollment.':'Your to-do list is empty.');return}
 });
 $('#notesBtn').onclick=()=>setNotes(!S.notes);
+$('#engineChip').onclick=()=>{S.ntab='process';setNotes(true);renderNotes();const b=$('.engine-box');b&&b.scrollIntoView({block:'center'})};
 $('#notesClose').onclick=()=>{$('#notes').hidden=true};
 $('#origClose').onclick=()=>{$('#orig').hidden=true};
 $('#orig').addEventListener('click',e=>{if(e.target.id==='orig')$('#orig').hidden=true});
@@ -934,7 +990,223 @@ window.addEventListener('resize',()=>{if(S.notes)renderPins()});
 setInterval(()=>{if(S.clock==='real'&&(S.view==='home'||S.view==='schedule'))render()},60000);
 
 go('home');
+
+/* ---------- load Python (logic.py) with Pyodide ---------- */
+function loadPython(){
+  const slot=document.getElementById('py-logic'),code=slot?slot.textContent.trim():'';
+  const fail=why=>{if(ENGINE.status==='ready')return;ENGINE.status='unavailable';ENGINE.why=why;console.info('[logic] Python unavailable, using JavaScript:',why);render()};
+  if(!code||code.startsWith('/*'))return fail('logic.py not bundled');
+  const base='https://cdn.jsdelivr.net/npm/pyodide@0.26.4/';
+  const timer=setTimeout(()=>fail('timed out'),30000);
+  const s=document.createElement('script');s.src=base+'pyodide.js';
+  s.onerror=()=>{clearTimeout(timer);fail('could not download Pyodide')};
+  s.onload=async()=>{try{
+    const py=await loadPyodide({indexURL:base});
+    py.runPython(code);
+    const api=py.globals.get('api');
+    const call=(n,a)=>JSON.parse(api(n,JSON.stringify(a)));
+    // check Python agrees with the JavaScript version before switching over
+    const probe={cart:['CECS 428','CECS 450','CECS 491B'].map(byCode),holds:[]};
+    if(JSON.stringify(call('check_cart',probe))!==JSON.stringify(JS_ENGINE.check_cart(probe)))throw new Error('self-test mismatch');
+    clearTimeout(timer);
+    ENGINE.call=(n,a)=>{try{return call(n,a)}catch(e){console.warn('[logic] Python error, using JavaScript for',n,e);return JS_ENGINE[n](a)}};
+    ENGINE.version=py.runPython('import sys; sys.version.split()[0]');
+    ENGINE.lang='Python';ENGINE.status='ready';
+    console.info('[logic] Python',ENGINE.version,'is running logic.py');
+    render();if(!$('#results').hidden)searchResults();
+  }catch(e){clearTimeout(timer);fail(e.message)}};
+  document.head.appendChild(s);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadPython);else loadPython();
 })();
+</script>
+<script type="text/x-python" id="py-logic">
+"""Enrollment and search logic for the Student Center prototype.
+
+This file runs in the browser through Pyodide (Python compiled to
+WebAssembly), so the prototype still needs no server and works on
+GitHub Pages. index.html calls these functions for:
+
+  * time-conflict detection in the shopping cart
+  * the "Check my cart" readiness check
+  * ranking results in the header search box
+
+If Python can't load (no internet, or a viewer that blocks it), the page
+falls back to matching JavaScript versions, so the demo never breaks.
+
+The page talks to Python through api(), which takes and returns JSON
+strings, so the JavaScript side never handles Python objects directly.
+
+A class section looks like:
+  {"code": "CECS 450", "title": "Data Visualization",
+   "days": ["Tu", "Th"], "s": "9:30", "e": "10:45", "consent": False}
+"""
+
+import json
+
+
+# ---------- time conflicts ----------
+
+def to_minutes(hhmm):
+    """'15:30' -> 930 minutes after midnight."""
+    hours, minutes = hhmm.split(":")
+    return int(hours) * 60 + int(minutes)
+
+
+def shared_days(a, b):
+    """Days both sections meet, e.g. ['Tu', 'Th']."""
+    return [day for day in a["days"] if day in b["days"]]
+
+
+def overlaps(a, b):
+    """True when two sections meet on a shared day at overlapping times.
+
+    Back-to-back classes (one ends at 10:45, the next starts at 10:45)
+    do not count as a conflict.
+    """
+    if not shared_days(a, b):
+        return False
+    return (to_minutes(a["s"]) < to_minutes(b["e"])
+            and to_minutes(b["s"]) < to_minutes(a["e"]))
+
+
+def find_conflicts(cart):
+    """Every pair of classes in the cart that overlap, as [code, code] pairs."""
+    pairs = []
+    for i, a in enumerate(cart):
+        for b in cart[i + 1:]:
+            if overlaps(a, b):
+                pairs.append([a["code"], b["code"]])
+    return pairs
+
+
+def catalog_clashes(cart, catalog):
+    """For each class not yet in the cart, the cart class it would overlap.
+
+    Used to flag "Overlaps CECS 428" in the class list *before* the
+    student adds the class (error prevention).
+    """
+    in_cart = {course["code"] for course in cart}
+    clashes = {}
+    for course in catalog:
+        if course["code"] in in_cart:
+            continue
+        for held in cart:
+            if overlaps(course, held):
+                clashes[course["code"]] = held["code"]
+                break
+    return clashes
+
+
+def check_cart(cart, holds):
+    """Decide whether the cart is ready to enroll.
+
+    Order matters:
+      1. A time conflict blocks enrollment.
+      2. A hold on the account blocks enrollment.
+      3. A class that needs a permission number only blocks that class.
+    """
+    conflicts = find_conflicts(cart)
+    needs_permission = [course["code"] for course in cart if course.get("consent")]
+    if conflicts or holds:
+        status = "bad"
+    elif needs_permission:
+        status = "warn"
+    else:
+        status = "ok"
+    return {
+        "status": status,
+        "conflicts": conflicts,
+        "holds": holds,
+        "needs_permission": needs_permission,
+    }
+
+
+# ---------- search ----------
+
+def score(query, code, title, keywords=""):
+    """How well one item matches the search; 0 means no match.
+
+    100  exact course number or code      "450", "cecs 450"
+     90  start of the number or code      "45", "cecs 4"
+     70  start of a word in the title     "graph" -> Computer Graphics
+     50  appears anywhere                 "visual" -> Data Visualization
+     40  every word appears somewhere     "mobile app" -> Mobile Application...
+    """
+    q = " ".join(query.lower().split())
+    if not q:
+        return 0
+    code_l = code.lower()
+    number = code_l.split()[-1] if code_l else ""
+    haystack = f"{code_l} {title.lower()} {keywords.lower()}"
+    if q in (number, code_l):
+        return 100
+    if (number and number.startswith(q)) or (code_l and code_l.startswith(q)):
+        return 90
+    if any(word.startswith(q) for word in title.lower().split()):
+        return 70
+    if q in haystack:
+        return 50
+    if all(word in haystack for word in q.split()):
+        return 40
+    return 0
+
+
+def rank(query, items, key, title, keywords=None):
+    """Matching items, best match first; ties keep their original order."""
+    scored = []
+    for position, item in enumerate(items):
+        s = score(query, item.get(key, "") if key == "code" else "",
+                  item.get(title, ""),
+                  item.get(keywords, "") if keywords else "")
+        if s:
+            scored.append((-s, position, item))
+    scored.sort()
+    return [item for _, _, item in scored]
+
+
+def search(query, mine, catalog, pages):
+    """Grouped results for the header search box."""
+    return {
+        "mine": [c["code"] for c in rank(query, mine, "code", "title")],
+        "catalog": [c["code"] for c in rank(query, catalog, "code", "title")],
+        "pages": [p["name"] for p in rank(query, pages, "name", "name", "k")],
+    }
+
+
+# ---------- bridge to the page ----------
+
+API = {
+    "find_conflicts": find_conflicts,
+    "catalog_clashes": catalog_clashes,
+    "check_cart": check_cart,
+    "search": search,
+}
+
+
+def api(name, payload_json):
+    """Called from JavaScript: api('check_cart', '{"cart": [...], "holds": []}')."""
+    return json.dumps(API[name](**json.loads(payload_json)))
+
+
+if __name__ == "__main__":
+    # Quick self-check: python3 logic.py
+    cs428 = {"code": "CECS 428", "title": "Analysis of Algorithms", "days": ["Tu", "Th"], "s": "9:30", "e": "10:45"}
+    cs450 = {"code": "CECS 450", "title": "Data Visualization", "days": ["Tu", "Th"], "s": "9:30", "e": "10:45"}
+    cs491b = {"code": "CECS 491B", "title": "Computer Science Senior Project II", "days": ["Mo", "We"], "s": "14:00", "e": "15:15", "consent": True}
+    late = {"code": "LATE 1", "title": "Back to back", "days": ["Tu"], "s": "10:45", "e": "11:30"}
+    assert find_conflicts([cs428, cs450, cs491b]) == [["CECS 428", "CECS 450"]]
+    assert not overlaps(cs428, late), "back-to-back classes are not a conflict"
+    assert check_cart([cs428, cs450], [])["status"] == "bad"
+    assert check_cart([cs428, cs491b], [])["status"] == "warn"
+    assert check_cart([cs428], [])["status"] == "ok"
+    assert check_cart([cs428], ["Advising hold"])["status"] == "bad"
+    assert catalog_clashes([cs428], [cs428, cs450, cs491b]) == {"CECS 450": "CECS 428"}
+    assert search("450", [], [cs428, cs450], [])["catalog"] == ["CECS 450"]
+    assert search("graph", [], [cs450], [])["catalog"] == []
+    assert search("visual", [], [cs450], [])["catalog"] == ["CECS 450"]
+    assert search("textbooks", [], [], [{"name": "My Textbooks", "k": "books"}])["pages"] == ["My Textbooks"]
+    print("logic.py: all checks passed")
 </script>
 </body>
 </html>

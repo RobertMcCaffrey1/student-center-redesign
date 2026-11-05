@@ -28,7 +28,7 @@ The full reasoning, including the options we rejected for each of the 11 issues,
 | 4. Class topics that guided decisions | Nielsen's heuristics, Norman's design principles (signifiers, mapping, feedback, constraints), Gestalt proximity, progressive disclosure, usability testing with SUS |
 | 5. Self-reflection and project management | Presentation slides. Fill in the [Team](#team) table below |
 | Rationale behind each interaction feature | "Options weighed" and "Why" in each decision record |
-| Demo runs without error | Single file, no dependencies besides Google Fonts, tested in Chromium |
+| Demo runs without error | Single page; Python logic via Pyodide with a JavaScript fallback; tested in Chromium with Python on and blocked |
 
 ## Run it
 
@@ -79,7 +79,20 @@ Fall 2026 course titles, meeting times, and rooms come from the [CSULB Fall 2026
 
 ## Tech
 
-A single HTML file with inline CSS and vanilla JavaScript. No frameworks or dependencies. It supports light and dark mode, works at phone width, and is fully keyboard operable.
+The interface is HTML, CSS, and JavaScript in `index.html`. The app logic is in Python:
+
+| Python (`logic.py`) | What it does in the prototype |
+|---|---|
+| `find_conflicts`, `overlaps` | Detects time conflicts in the Spring shopping cart |
+| `catalog_clashes` | Flags "Overlaps CECS 428" on a class *before* you add it |
+| `check_cart` | Decides the "Check my cart" result: conflicts, holds, missing permission numbers |
+| `search`, `score` | Ranks header search results (exact course number, then code prefix, then title words) |
+
+`logic.py` runs **in the browser** through [Pyodide](https://pyodide.org) (Python 3.12 compiled to WebAssembly), so there is still no server and GitHub Pages works. The build step bundles `logic.py` into `index.html`. A green **Python 3.12** chip in the bottom-left shows when it is running. If Pyodide can't load, for example with no internet, the page uses matching JavaScript versions and gives the same results.
+
+Run the Python self-checks directly with `python3 logic.py`.
+
+No frameworks. It supports light and dark mode, works at phone width, and is fully keyboard operable.
 
 ## Team
 
